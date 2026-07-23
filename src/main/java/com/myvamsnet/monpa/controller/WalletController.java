@@ -101,17 +101,17 @@ public class WalletController {
         return walletService.getWalletByUserId(id);
     }
 
-    @GetMapping("/transactions")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public List<TransactionResponse> getTransactionHistory(
-            Authentication authentication
-    ) {
-
-        CustomUserDetails user =
-                (CustomUserDetails) authentication.getPrincipal();
-
-        assert user != null;
-        return transactionService.getTransactionHistory(user.getId());
-    }
+//    @GetMapping("/transactions")
+//    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+//    public List<TransactionResponse> getTransactionHistory(
+//            Authentication authentication
+//    ) {
+//
+//        CustomUserDetails user =
+//                (CustomUserDetails) authentication.getPrincipal();
+//
+//        assert user != null;
+//        return transactionService.getTransactionHistory(user.getId());
+//    }
 
 }

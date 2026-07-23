@@ -1,28 +1,33 @@
 package com.myvamsnet.monpa.service;
 
+import com.myvamsnet.monpa.common.exception.UserNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
+import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.common.exception.WalletNotFoundException;
 import com.myvamsnet.monpa.mapper.TransactionMapper;
-import com.myvamsnet.monpa.model.Transaction;
-import com.myvamsnet.monpa.model.TransactionStatus;
-import com.myvamsnet.monpa.model.TransactionType;
-import com.myvamsnet.monpa.model.Wallet;
+import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.TransactionRepository;
+import com.myvamsnet.monpa.repository.UserRepository;
 import com.myvamsnet.monpa.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.UUID;
 
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
+
+    private final UserRepository userRepository;
 
     private final WalletRepository walletRepository;
 
@@ -153,21 +158,49 @@ public class TransactionService {
                         .toUpperCase();
     }
 
+//    @Transactional(readOnly = true)
+//    public List<TransactionResponse> getTransactionHistory(Long userId) {
+//
+//        Wallet wallet = walletRepository
+//                .findByUserId(userId)
+//                .orElseThrow(() ->
+//                        new WalletNotFoundException(userId));
+//
+//        return transactionRepository
+//                .findByWalletIdOrderByCreatedAtDesc(
+//                        wallet.getId()
+//                )
+//                .stream()
+//                .map(transactionMapper::toResponse)
+//                .toList();
+//
+//    }
+
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getTransactionHistory(Long userId) {
+    public Page<TransactionHistoryResponse> getTransactionHistory(
+            String email,
+            int page,
+            int size
+    ) {
 
-        Wallet wallet = walletRepository
-                .findByUserId(userId)
-                .orElseThrow(() ->
-                        new WalletNotFoundException(userId));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        return transactionRepository
-                .findByWalletIdOrderByCreatedAtDesc(
-                        wallet.getId()
-                )
-                .stream()
-                .map(transactionMapper::toResponse)
-                .toList();
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
 
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<Transaction> transactions =
+                transactionRepository.findByWalletOrderByCreatedAtDesc(
+                        wallet,
+                        pageable
+                );
+
+        return transactions.map(transactionMapper::toHistoryResponse);
     }
 }
