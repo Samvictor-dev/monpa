@@ -1,0 +1,40 @@
+package com.myvamsnet.monpa.controller.admin;
+
+import com.myvamsnet.monpa.dto.common.PagedResponse;
+import com.myvamsnet.monpa.dto.transaction.AdminTransactionFilter;
+import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
+import com.myvamsnet.monpa.service.AdminTransactionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/admin/transactions")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminTransactionController {
+
+    private final AdminTransactionService adminTransactionService;
+
+    @GetMapping
+    public PagedResponse<TransactionHistoryResponse> getAllTransactions(
+
+            @ModelAttribute AdminTransactionFilter filter,
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "20")
+            int size
+
+    ) {
+
+        return adminTransactionService.getAllTransactions(
+                filter,
+                page,
+                size
+        );
+
+    }
+
+}

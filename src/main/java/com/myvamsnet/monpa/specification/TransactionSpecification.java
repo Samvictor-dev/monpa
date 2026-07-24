@@ -50,6 +50,16 @@ public class TransactionSpecification {
 
     }
 
+    public static Specification<Transaction> hasTransferReference(String reference) {
+
+        return (root, query, cb) ->
+
+                (reference == null || reference.isBlank())
+                        ? cb.conjunction()
+                        : cb.equal(root.get("transferReference"), reference);
+
+    }
+
     public static Specification<Transaction> createdBetween(
             LocalDateTime from,
             LocalDateTime to
