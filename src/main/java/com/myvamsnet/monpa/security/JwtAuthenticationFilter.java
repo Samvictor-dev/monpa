@@ -51,6 +51,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails =
                     userDetailsService.loadUserByUsername(username);
 
+            // 6a. Validate user account status
+            if (!userDetails.isEnabled()) {
+
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+                response.getWriter().write("""
+        {
+          "error":"Forbidden",
+          "message":"Account has been suspended"
+        }
+        """);
+
+                return;
+            }
+
             // 7. Validate the token
             if (jwtService.isTokenValid(jwt, userDetails)) {
 

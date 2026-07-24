@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.security;
 
+import com.myvamsnet.monpa.model.AccountStatus;
 import com.myvamsnet.monpa.model.User;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
@@ -56,7 +57,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isAccountNonLocked() {
 
-        return true;
+        return user.getAccountStatus() == AccountStatus.ACTIVE;
 
     }
 
@@ -70,7 +71,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
 
-        return true;
+        return user.getAccountStatus() == AccountStatus.ACTIVE;
 
     }
 
