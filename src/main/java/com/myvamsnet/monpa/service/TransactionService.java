@@ -10,15 +10,18 @@ import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.TransactionRepository;
 import com.myvamsnet.monpa.repository.UserRepository;
 import com.myvamsnet.monpa.repository.WalletRepository;
+import com.myvamsnet.monpa.specification.TransactionSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
@@ -165,10 +168,13 @@ public class TransactionService {
 //
 //    }
 
-    @Transactional(readOnly = true)
     public PagedResponse<TransactionHistoryResponse> getTransactionHistory(
             String email,
             TransactionType type,
+            TransactionStatus status,
+            String reference,
+            LocalDateTime from,
+            LocalDateTime to,
             int page,
             int size
     ) {
@@ -185,26 +191,42 @@ public class TransactionService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Page<Transaction> transactions;
+        Specification<Transaction> specification =
+                Specification
+                        .where(TransactionSpecification.hasWallet(wallet))
+                        .and(TransactionSpecification.hasType(type))
+                        .and(TransactionSpecification.hasStatus(status))
+                        .and(TransactionSpecification.hasTransactionReference(reference))
+                        .and(TransactionSpecification.createdBetween(from, to));
 
-        if (type != null) {
+        Page<Transaction> transactions =
+                transactionRepository.findAll(
+                        specification,
+                        pageable
+                );
 
-            transactions =
-                    transactionRepository.findByWalletAndTypeOrderByCreatedAtDesc(
-                            wallet,
-                            type,
-                            pageable
-                    );
 
-        } else {
 
-            transactions =
-                    transactionRepository.findByWalletOrderByCreatedAtDesc(
-                            wallet,
-                            pageable
-                    );
+//        Page<Transaction> transactions;
 
-        }
+//        if (type != null) {
+//
+//            transactions =
+//                    transactionRepository.findByWalletAndTypeOrderByCreatedAtDesc(
+//                            wallet,
+//                            type,
+//                            pageable
+//                    );
+//
+//        } else {
+//
+//            transactions =
+//                    transactionRepository.findByWalletOrderByCreatedAtDesc(
+//                            wallet,
+//                            pageable
+//                    );
+//
+//        }
 
         Page<TransactionHistoryResponse> responsePage =
                 transactions.map(transactionMapper::toHistoryResponse);
