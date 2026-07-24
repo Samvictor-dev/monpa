@@ -1,6 +1,8 @@
 package com.myvamsnet.monpa.service;
 
 import com.myvamsnet.monpa.common.exception.UserNotFoundException;
+import com.myvamsnet.monpa.common.pagination.PageRequestFactory;
+import com.myvamsnet.monpa.common.pagination.PaginationUtil;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.TransactionFilter;
@@ -22,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
@@ -182,11 +183,8 @@ public class TransactionService {
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+        Pageable pageable =
+                PageRequestFactory.defaultPage(page, size);
 
         Specification<Transaction> specification =
                 Specification
@@ -199,48 +197,15 @@ public class TransactionService {
                                 filter.getTo()
                         ));
 
-        Page<Transaction> transactions =
+        Page<Transaction> transactionPage =
                 transactionRepository.findAll(
                         specification,
                         pageable
                 );
 
-
-
-//        Page<Transaction> transactions;
-
-//        if (type != null) {
-//
-//            transactions =
-//                    transactionRepository.findByWalletAndTypeOrderByCreatedAtDesc(
-//                            wallet,
-//                            type,
-//                            pageable
-//                    );
-//
-//        } else {
-//
-//            transactions =
-//                    transactionRepository.findByWalletOrderByCreatedAtDesc(
-//                            wallet,
-//                            pageable
-//                    );
-//
-//        }
-
         Page<TransactionHistoryResponse> responsePage =
-                transactions.map(transactionMapper::toHistoryResponse);
+                transactionPage.map(transactionMapper::toHistoryResponse);
 
-        return PagedResponse.<TransactionHistoryResponse>builder()
-                .content(responsePage.getContent())
-                .page(responsePage.getNumber())
-                .size(responsePage.getSize())
-                .totalElements(responsePage.getTotalElements())
-                .totalPages(responsePage.getTotalPages())
-                .first(responsePage.isFirst())
-                .last(responsePage.isLast())
-                .hasNext(responsePage.hasNext())
-                .hasPrevious(responsePage.hasPrevious())
-                .build();
+        return PaginationUtil.from(responsePage);
     }
 }

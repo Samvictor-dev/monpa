@@ -1,5 +1,7 @@
 package com.myvamsnet.monpa.service;
 
+import com.myvamsnet.monpa.common.pagination.PageRequestFactory;
+import com.myvamsnet.monpa.common.pagination.PaginationUtil;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.AdminTransactionFilter;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
@@ -9,9 +11,7 @@ import com.myvamsnet.monpa.repository.TransactionRepository;
 import com.myvamsnet.monpa.specification.AdminTransactionSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +35,7 @@ public class AdminTransactionService {
     ) {
 
         Pageable pageable =
-                PageRequest.of(
-                        page,
-                        size,
-                        Sort.by(Sort.Direction.DESC, "createdAt")
-                );
+                PageRequestFactory.defaultPage(page, size);
 
         Page<Transaction> transactionPage =
                 transactionRepository.findAll(
@@ -50,17 +46,7 @@ public class AdminTransactionService {
         Page<TransactionHistoryResponse> responsePage =
                 transactionPage.map(transactionMapper::toHistoryResponse);
 
-        return PagedResponse.<TransactionHistoryResponse>builder()
-                .content(responsePage.getContent())
-                .page(responsePage.getNumber())
-                .size(responsePage.getSize())
-                .totalElements(responsePage.getTotalElements())
-                .totalPages(responsePage.getTotalPages())
-                .first(responsePage.isFirst())
-                .last(responsePage.isLast())
-                .hasNext(responsePage.hasNext())
-                .hasPrevious(responsePage.hasPrevious())
-                .build();
+        return PaginationUtil.from(responsePage);
 
     }
 
