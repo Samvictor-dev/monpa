@@ -1,4 +1,4 @@
-package com.myvamsnet.monpa.controller;
+package com.myvamsnet.monpa.controller.customer;
 
 import com.myvamsnet.monpa.dto.common.ApiResponse;
 import com.myvamsnet.monpa.dto.user.*;
