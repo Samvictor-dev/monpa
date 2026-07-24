@@ -2,6 +2,7 @@ package com.myvamsnet.monpa.repository;
 
 
 import com.myvamsnet.monpa.model.Transaction;
+import com.myvamsnet.monpa.model.TransactionType;
 import com.myvamsnet.monpa.model.Wallet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,12 @@ public interface TransactionRepository
 
     Page<Transaction> findByWalletOrderByCreatedAtDesc(
             Wallet wallet,
+            Pageable pageable
+    );
+
+    Page<Transaction> findByWalletAndTypeOrderByCreatedAtDesc(
+            Wallet wallet,
+            TransactionType type,
             Pageable pageable
     );
 

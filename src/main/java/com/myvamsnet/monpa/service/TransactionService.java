@@ -168,6 +168,7 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public PagedResponse<TransactionHistoryResponse> getTransactionHistory(
             String email,
+            TransactionType type,
             int page,
             int size
     ) {
@@ -184,11 +185,26 @@ public class TransactionService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Page<Transaction> transactions =
-                transactionRepository.findByWalletOrderByCreatedAtDesc(
-                        wallet,
-                        pageable
-                );
+        Page<Transaction> transactions;
+
+        if (type != null) {
+
+            transactions =
+                    transactionRepository.findByWalletAndTypeOrderByCreatedAtDesc(
+                            wallet,
+                            type,
+                            pageable
+                    );
+
+        } else {
+
+            transactions =
+                    transactionRepository.findByWalletOrderByCreatedAtDesc(
+                            wallet,
+                            pageable
+                    );
+
+        }
 
         Page<TransactionHistoryResponse> responsePage =
                 transactions.map(transactionMapper::toHistoryResponse);
