@@ -2,8 +2,8 @@ package com.myvamsnet.monpa.service;
 
 import com.myvamsnet.monpa.common.exception.UserNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
+import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
-import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.common.exception.WalletNotFoundException;
 import com.myvamsnet.monpa.mapper.TransactionMapper;
 import com.myvamsnet.monpa.model.*;
@@ -147,17 +147,6 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    private String generateReference() {
-
-        return "MM-" +
-                LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                + "-" +
-                UUID.randomUUID()
-                        .toString()
-                        .substring(0,8)
-                        .toUpperCase();
-    }
-
 //    @Transactional(readOnly = true)
 //    public List<TransactionResponse> getTransactionHistory(Long userId) {
 //
@@ -177,7 +166,7 @@ public class TransactionService {
 //    }
 
     @Transactional(readOnly = true)
-    public Page<TransactionHistoryResponse> getTransactionHistory(
+    public PagedResponse<TransactionHistoryResponse> getTransactionHistory(
             String email,
             int page,
             int size
@@ -201,6 +190,19 @@ public class TransactionService {
                         pageable
                 );
 
-        return transactions.map(transactionMapper::toHistoryResponse);
+        Page<TransactionHistoryResponse> responsePage =
+                transactions.map(transactionMapper::toHistoryResponse);
+
+        return PagedResponse.<TransactionHistoryResponse>builder()
+                .content(responsePage.getContent())
+                .page(responsePage.getNumber())
+                .size(responsePage.getSize())
+                .totalElements(responsePage.getTotalElements())
+                .totalPages(responsePage.getTotalPages())
+                .first(responsePage.isFirst())
+                .last(responsePage.isLast())
+                .hasNext(responsePage.hasNext())
+                .hasPrevious(responsePage.hasPrevious())
+                .build();
     }
 }

@@ -1,9 +1,9 @@
 package com.myvamsnet.monpa.controller;
 
+import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
 import com.myvamsnet.monpa.service.TransactionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity<Page<TransactionHistoryResponse>> getTransactionHistory(
+    public ResponseEntity<PagedResponse<TransactionHistoryResponse>> getTransactionHistory(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -24,7 +24,7 @@ public class TransactionController {
 
         String email = authentication.getName();
 
-        Page<TransactionHistoryResponse> response =
+        PagedResponse<TransactionHistoryResponse> response =
                 transactionService.getTransactionHistory(
                         email,
                         page,
@@ -33,4 +33,21 @@ public class TransactionController {
 
         return ResponseEntity.ok(response);
     }
+
+//    Cleaner Version
+
+//    #public ResponseEntity<PagedResponse<TransactionHistoryResponse>> getTransactionHistory(
+//            Authentication authentication,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//
+//        return ResponseEntity.ok(
+//                transactionService.getTransactionHistory(
+//                        authentication.getName(),
+//                        page,
+//                        size
+//                )
+//        );
+//    }
 }
