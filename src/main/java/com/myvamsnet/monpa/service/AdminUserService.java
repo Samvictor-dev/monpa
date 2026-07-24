@@ -1,11 +1,13 @@
 package com.myvamsnet.monpa.service;
 
+import com.myvamsnet.monpa.common.exception.UserNotFoundException;
 import com.myvamsnet.monpa.common.pagination.PageRequestFactory;
 import com.myvamsnet.monpa.common.pagination.PaginationUtil;
 import com.myvamsnet.monpa.dto.admin.AdminUserFilter;
 import com.myvamsnet.monpa.dto.admin.AdminUserResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.mapper.AdminUserMapper;
+import com.myvamsnet.monpa.model.AccountStatus;
 import com.myvamsnet.monpa.model.User;
 import com.myvamsnet.monpa.repository.UserRepository;
 import com.myvamsnet.monpa.repository.WalletRepository;
@@ -52,6 +54,28 @@ public class AdminUserService {
                 users.map(adminUserMapper::toResponse);
 
         return PaginationUtil.from(responsePage);
+
+    }
+
+    @Transactional
+    public void freezeUser(Long id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        user.setAccountStatus(AccountStatus.SUSPENDED);
+
+    }
+
+    @Transactional
+    public void activateUser(Long id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        user.setAccountStatus(AccountStatus.ACTIVE);
 
     }
 

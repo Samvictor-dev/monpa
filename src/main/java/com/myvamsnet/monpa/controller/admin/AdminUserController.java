@@ -5,6 +5,7 @@ import com.myvamsnet.monpa.dto.admin.AdminUserResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,28 @@ public class AdminUserController {
                 page,
                 size
         );
+
+    }
+
+    @PatchMapping("/{id}/freeze")
+    public ResponseEntity<Void> freezeUser(
+            @PathVariable Long id
+    ) {
+
+        adminUserService.freezeUser(id);
+
+        return ResponseEntity.noContent().build();
+
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<Void> activateUser(
+            @PathVariable Long id
+    ) {
+
+        adminUserService.activateUser(id);
+
+        return ResponseEntity.noContent().build();
 
     }
 
