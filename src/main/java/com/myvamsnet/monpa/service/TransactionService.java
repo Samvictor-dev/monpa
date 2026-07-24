@@ -3,6 +3,7 @@ package com.myvamsnet.monpa.service;
 import com.myvamsnet.monpa.common.exception.UserNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
+import com.myvamsnet.monpa.dto.transaction.TransactionFilter;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
 import com.myvamsnet.monpa.common.exception.WalletNotFoundException;
 import com.myvamsnet.monpa.mapper.TransactionMapper;
@@ -170,11 +171,7 @@ public class TransactionService {
 
     public PagedResponse<TransactionHistoryResponse> getTransactionHistory(
             String email,
-            TransactionType type,
-            TransactionStatus status,
-            String reference,
-            LocalDateTime from,
-            LocalDateTime to,
+            TransactionFilter filter,
             int page,
             int size
     ) {
@@ -194,10 +191,13 @@ public class TransactionService {
         Specification<Transaction> specification =
                 Specification
                         .where(TransactionSpecification.hasWallet(wallet))
-                        .and(TransactionSpecification.hasType(type))
-                        .and(TransactionSpecification.hasStatus(status))
-                        .and(TransactionSpecification.hasTransactionReference(reference))
-                        .and(TransactionSpecification.createdBetween(from, to));
+                        .and(TransactionSpecification.hasType(filter.getType()))
+                        .and(TransactionSpecification.hasStatus(filter.getStatus()))
+                        .and(TransactionSpecification.hasTransactionReference(filter.getReference()))
+                        .and(TransactionSpecification.createdBetween(
+                                filter.getFrom(),
+                                filter.getTo()
+                        ));
 
         Page<Transaction> transactions =
                 transactionRepository.findAll(

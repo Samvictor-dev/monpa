@@ -1,6 +1,7 @@
 package com.myvamsnet.monpa.controller;
 
 import com.myvamsnet.monpa.dto.common.PagedResponse;
+import com.myvamsnet.monpa.dto.transaction.TransactionFilter;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
 import com.myvamsnet.monpa.model.TransactionStatus;
 import com.myvamsnet.monpa.model.TransactionType;
@@ -25,22 +26,7 @@ public class TransactionController {
 
             Authentication authentication,
 
-            @RequestParam(required = false)
-            TransactionType type,
-
-            @RequestParam(required = false)
-            TransactionStatus status,
-
-            @RequestParam(required = false)
-            String reference,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime from,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime to,
+            @ModelAttribute TransactionFilter filter,
 
             @RequestParam(defaultValue = "0")
             int page,
@@ -55,11 +41,7 @@ public class TransactionController {
                 transactionService.getTransactionHistory(
 
                         authentication.getName(),
-                        type,
-                        status,
-                        reference,
-                        from,
-                        to,
+                        filter,
                         page,
                         size
 
@@ -69,7 +51,7 @@ public class TransactionController {
 
     }
 
-//    Cleaner Version
+//    Starting point Version
 
 //    #public ResponseEntity<PagedResponse<TransactionHistoryResponse>> getTransactionHistory(
 //            Authentication authentication,
