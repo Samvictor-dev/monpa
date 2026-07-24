@@ -52,6 +52,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus accountStatus = AccountStatus.ACTIVE;
+
     @OneToOne(mappedBy = "user")
     private Wallet wallet;
 
