@@ -8,6 +8,7 @@ import com.myvamsnet.monpa.dto.admin.AdminUserResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.mapper.AdminUserMapper;
 import com.myvamsnet.monpa.model.AccountStatus;
+import com.myvamsnet.monpa.model.AuditAction;
 import com.myvamsnet.monpa.model.User;
 import com.myvamsnet.monpa.repository.UserRepository;
 import com.myvamsnet.monpa.repository.WalletRepository;
@@ -28,6 +29,8 @@ public class AdminUserService {
     private final WalletRepository walletRepository;
 
     private final AdminUserMapper adminUserMapper;
+
+    private final AuditService auditService;
 
     public PagedResponse<AdminUserResponse> getUsers(
 
@@ -58,13 +61,32 @@ public class AdminUserService {
     }
 
     @Transactional
-    public void freezeUser(Long id) {
+    public void freezeUser(
+
+            Long id,
+
+            String adminEmail
+
+    ) {
 
         User user = userRepository.findById(id)
+
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found"));
 
         user.setAccountStatus(AccountStatus.SUSPENDED);
+
+        auditService.log(
+
+                adminEmail,
+
+                user.getEmail(),
+
+                AuditAction.FREEZE_ACCOUNT,
+
+                "Administrator suspended account"
+
+        );
 
     }
 

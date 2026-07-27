@@ -7,6 +7,7 @@ import com.myvamsnet.monpa.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,13 +42,16 @@ public class AdminUserController {
 
     @PatchMapping("/{id}/freeze")
     public ResponseEntity<Void> freezeUser(
+            Authentication authentication,
             @PathVariable Long id
     ) {
 
-        adminUserService.freezeUser(id);
+        adminUserService.freezeUser(
+                id,
+                authentication.getName()
+        );
 
         return ResponseEntity.noContent().build();
-
     }
 
     @PatchMapping("/{id}/activate")

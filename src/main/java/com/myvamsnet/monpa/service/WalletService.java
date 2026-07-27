@@ -140,6 +140,23 @@ public class WalletService {
 
     }
 
+    @Transactional
+    public WalletResponse unfreezeWallet(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        wallet.unfreeze();
+
+        walletRepository.save(wallet);
+
+        return walletMapper.toWalletResponse(wallet);
+
+    }
+
 
 
     @Transactional

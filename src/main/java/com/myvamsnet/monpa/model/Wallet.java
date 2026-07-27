@@ -162,6 +162,14 @@ public class Wallet {
 
     public void unfreeze(){
 
+        if(status == WalletStatus.ACTIVE){
+
+            throw new IllegalStateException(
+                    "Wallet already active."
+            );
+
+        }
+
         status = WalletStatus.ACTIVE;
 
     }

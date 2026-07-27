@@ -39,6 +39,17 @@ public class WalletController {
 
     }
 
+    @GetMapping("/unfreeze")
+    public ResponseEntity<WalletResponse> unfreezeWallet(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                walletService.unfreezeWallet(authentication.getName())
+        );
+
+    }
+
     @GetMapping("/me")
     public ResponseEntity<WalletResponse> getMyWallet(
             Authentication authentication) {
