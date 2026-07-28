@@ -1,6 +1,8 @@
 package com.myvamsnet.monpa.model;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
@@ -11,6 +13,12 @@ public class Journal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
+
+    @Column(nullable =false)
+    private String currency;
 
     @Column(nullable = false, unique = true)
     private String journalReference;

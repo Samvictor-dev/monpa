@@ -30,6 +30,9 @@ public class LedgerEntry {
     @Column(nullable = false)
     private String description;
 
+    @Column(nullable =false)
+    private String reference;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 }

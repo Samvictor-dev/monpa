@@ -2,17 +2,18 @@ package com.myvamsnet.monpa.model;
 
 public enum LedgerAccountType {
 
-    CUSTOMER,
+    CASH,
+
+    CUSTOMER_LIABILITY,
 
     SETTLEMENT,
 
-    REVENUE,
+    FEE_REVENUE,
 
     ESCROW,
 
     SUSPENSE
 
-//    PLATFORM_REVENUE
 //    VAT
 //    PARTNER_SETTLEMENT
 //    COMMISSION
