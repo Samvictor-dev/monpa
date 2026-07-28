@@ -8,8 +8,11 @@ import com.myvamsnet.monpa.repository.LedgerEntryRepository;
 import com.myvamsnet.monpa.util.ReferenceGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -106,6 +109,94 @@ public class JournalService {
         journal.setPostedAt(LocalDateTime.now());
 
         journalRepository.save(journal);
+
+    }
+
+    @Transactional
+    public Journal recordDeposit(
+            Wallet wallet,
+            Money money,
+            String narration
+    ) {
+
+        Journal journal = createJournal(
+                JournalType.DEPOSIT,
+                money,
+                narration
+        );
+
+        LedgerAccount cashAccount =
+                ledgerAccountRepository
+                        .findByType(LedgerAccountType.CASH)
+                        .orElseThrow();
+
+        LedgerAccount customerLiability =
+                ledgerAccountRepository
+                        .findByType(
+                                LedgerAccountType.CUSTOMER_LIABILITY
+                        )
+                        .orElseThrow();
+
+        createDebitEntry(
+                journal,
+                cashAccount,
+                money,
+                "Cash received"
+        );
+
+        createCreditEntry(
+                journal,
+                customerLiability,
+                money,
+                "Customer wallet funded"
+        );
+
+        validateJournal(journal);
+
+        postJournal(journal);
+
+        return journal;
+
+    }
+
+    private void validateJournal(
+            Journal journal
+    ) {
+
+        List<LedgerEntry> entries =
+                ledgerEntryRepository.findByJournalId(
+                        journal.getId()
+                );
+
+        BigDecimal debit = BigDecimal.ZERO;
+
+        BigDecimal credit = BigDecimal.ZERO;
+
+        for (LedgerEntry entry : entries) {
+
+            if (entry.getEntryType() == LedgerEntryType.DEBIT) {
+
+                debit = debit.add(
+                        entry.getMoney().getAmount()
+                );
+
+            } else {
+
+                credit = credit.add(
+                        entry.getMoney().getAmount()
+                );
+
+            }
+
+        }
+
+        if (debit.compareTo(credit) != 0) {
+
+            throw new IllegalStateException(
+                    "Journal is not balanced."
+            );
+
+        }
 
     }
 
