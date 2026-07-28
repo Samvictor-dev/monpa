@@ -14,10 +14,10 @@ public class Journal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable =false)
+    @Column(nullable = false, length = 3)
     private String currency;
 
     @Column(nullable = false, unique = true)
