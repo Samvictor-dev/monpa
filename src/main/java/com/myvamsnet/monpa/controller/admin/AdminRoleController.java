@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.controller.admin;
 
+import org.springframework.security.core.Authentication;
 import com.myvamsnet.monpa.service.AdminRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +22,17 @@ public class AdminRoleController {
 
     @PatchMapping("/{id}/promote")
     public ResponseEntity<Void> promote(
+            Authentication authentication,
             @PathVariable Long id
     ) {
 
-        adminRoleService.promoteToAdmin(id);
+        adminRoleService.promoteToAdmin(
+
+                id,
+
+                authentication.getName()
+
+        );
 
         return ResponseEntity.noContent().build();
 
@@ -32,10 +40,17 @@ public class AdminRoleController {
 
     @PatchMapping("/{id}/demote")
     public ResponseEntity<Void> demote(
+            Authentication authentication,
             @PathVariable Long id
     ) {
 
-        adminRoleService.demoteAdmin(id);
+        adminRoleService.demoteAdmin(
+
+                id,
+
+                authentication.getName()
+
+        );
 
         return ResponseEntity.noContent().build();
 

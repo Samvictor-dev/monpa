@@ -28,8 +28,6 @@ public class AuthController {
         return authenticationService.authenticate(request);
     }
 
-    //User can't register yet
-
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> register(
             @Valid @RequestBody CreateUserRequest request
@@ -42,7 +40,7 @@ public class AuthController {
                 .body(
                         ApiResponse.<UserResponse>builder()
                                 .success(true)
-                                .message("User created successfully")
+                                .message("User created successfully with assigned wallet")
                                 .data(response)
                                 .build()
                 );

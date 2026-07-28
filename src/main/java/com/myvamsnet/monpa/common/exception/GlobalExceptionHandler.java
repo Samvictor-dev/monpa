@@ -205,6 +205,26 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(InvalidRoleOperationException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRoleOperationException(
+            InvalidRoleOperationException ex,
+            HttpServletRequest request
+    ) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+
+    }
+
     @ExceptionHandler(WalletNotActiveException.class)
     public ResponseEntity<ErrorResponse> handleInactiveWallet(
 
