@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.repository;
 
+import com.myvamsnet.monpa.model.Role;
 import com.myvamsnet.monpa.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,5 +26,7 @@ public interface UserRepository extends
     boolean existsByEmail(String email);
 
     Optional<User> findByEmail(String email);
+
+    boolean existsByRole(Role role);
 
 }

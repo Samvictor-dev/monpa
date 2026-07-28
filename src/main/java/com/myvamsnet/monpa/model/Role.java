@@ -3,6 +3,9 @@ package com.myvamsnet.monpa.model;
 public enum Role {
 
     USER,
-    ADMIN
+
+    ADMIN,
+
+    SUPER_ADMIN
 
 }
