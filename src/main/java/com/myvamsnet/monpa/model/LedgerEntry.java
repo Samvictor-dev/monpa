@@ -2,9 +2,18 @@ package com.myvamsnet.monpa.model;
 
 import com.myvamsnet.monpa.common.valueobject.Money;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "ledger_entries")
 public class LedgerEntry {
