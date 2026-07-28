@@ -27,6 +27,8 @@ public interface UserRepository extends
 
     Optional<User> findByEmail(String email);
 
+    long countByRole(Role role);
+
     boolean existsByRole(Role role);
 
 }

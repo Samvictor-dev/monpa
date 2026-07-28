@@ -74,6 +74,9 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**")
+                        .hasRole("SUPER_ADMIN")
+
+                        .requestMatchers("/api/admin/**")
                         .hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         .anyRequest().authenticated()
