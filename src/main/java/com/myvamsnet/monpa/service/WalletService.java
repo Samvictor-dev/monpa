@@ -31,6 +31,8 @@ public class WalletService {
 
     private final TransactionService transactionService;
 
+    private final JournalService journalService;
+
 
     @Transactional
     public void createWallet(User user) {
@@ -103,6 +105,13 @@ public class WalletService {
         Money depositAmount = Money.of(
                 request.getAmount(),
                 wallet.getCurrency()
+        );
+
+        journalService.recordDeposit(
+                wallet,
+                depositAmount,
+                "Deposit into wallet "
+                        + wallet.getAccountNumber()
         );
 
         wallet.deposit(depositAmount);
