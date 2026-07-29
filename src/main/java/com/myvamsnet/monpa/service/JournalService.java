@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.service;
 
+import com.myvamsnet.monpa.common.exception.LedgerAccountNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.JournalRepository;
@@ -136,14 +137,18 @@ public class JournalService {
         LedgerAccount cashAccount =
                 ledgerAccountRepository
                         .findByType(LedgerAccountType.CASH)
-                        .orElseThrow();
+                        .orElseThrow(() ->
+                                new LedgerAccountNotFoundException(
+                                        LedgerAccountType.CASH
+                                ));
 
         LedgerAccount customerLiability =
                 ledgerAccountRepository
-                        .findByType(
-                                LedgerAccountType.CUSTOMER_LIABILITY
-                        )
-                        .orElseThrow();
+                        .findByType(LedgerAccountType.CUSTOMER_LIABILITY)
+                        .orElseThrow(() ->
+                                new LedgerAccountNotFoundException(
+                                        LedgerAccountType.CUSTOMER_LIABILITY
+                                ));
 
         createDebitEntry(
                 journal,
@@ -157,6 +162,61 @@ public class JournalService {
                 customerLiability,
                 money,
                 "Customer wallet funded"
+        );
+
+        validateJournal(journal);
+
+        postJournal(journal);
+
+        return journal;
+
+    }
+
+    @Transactional
+    public Journal recordWithdrawal(
+            Wallet wallet,
+            Money money,
+            String narration
+    ) {
+
+        Journal journal = createJournal(
+                JournalType.WITHDRAWAL,
+                money,
+                narration
+        );
+
+        LedgerAccount customerLiability =
+                ledgerAccountRepository
+                        .findByType(
+                                LedgerAccountType.CUSTOMER_LIABILITY
+                        )
+                        .orElseThrow(() ->
+                                new LedgerAccountNotFoundException(
+                                        LedgerAccountType.CUSTOMER_LIABILITY
+                                ));
+
+        LedgerAccount cash =
+                ledgerAccountRepository
+                        .findByType(
+                                LedgerAccountType.CASH
+                        )
+                        .orElseThrow(() ->
+                                new LedgerAccountNotFoundException(
+                                        LedgerAccountType.CASH
+                                ));
+
+        createDebitEntry(
+                journal,
+                customerLiability,
+                money,
+                "Customer withdrawal"
+        );
+
+        createCreditEntry(
+                journal,
+                cash,
+                money,
+                "Cash paid out"
         );
 
         validateJournal(journal);

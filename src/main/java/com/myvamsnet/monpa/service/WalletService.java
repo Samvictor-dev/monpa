@@ -185,19 +185,35 @@ public class WalletService {
                 wallet.getCurrency()
         );
 
+        Money money = Money.of(
+                request.getAmount(),
+                wallet.getCurrency()
+        );
+
+        Journal journal =
+                journalService.recordWithdrawal(
+                        wallet,
+                        money,
+                        "Withdrawal from wallet "
+                                + wallet.getAccountNumber()
+                );
+
         wallet.withdraw(withdrawal);
 
         walletRepository.save(wallet);
 
-        String transferReference =
-                transactionService.generateTransferReference();
+        String transactionReference =
+                transactionService.generateTransactionReference();
 
-        transactionService.recordTransferOut(
+        Transaction transaction =
+                transactionService.recordWithdrawal(
                 wallet,
                 withdrawal,
                 "Wallet Withdrawal",
-                transferReference
+                        transactionReference
         );
+
+        transaction.setJournal(journal);
 
         return walletMapper.toWalletResponse(wallet);
 

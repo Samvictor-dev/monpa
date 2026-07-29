@@ -122,6 +122,34 @@ public class TransactionService {
     }
 
     @Transactional
+    public Transaction recordWithdrawal(
+            Wallet wallet,
+            Money amount,
+            String description,
+            String reference) {
+
+        Transaction transaction = new Transaction();
+
+        transaction.setTransactionReference(reference);
+
+        transaction.setWallet(wallet);
+
+        transaction.setBalanceAfterTransaction(wallet.getBalance());
+
+        transaction.setType(TransactionType.WITHDRAWAL);
+
+        transaction.setStatus(TransactionStatus.SUCCESS);
+
+        transaction.setAmount(amount.getAmount());
+
+        transaction.setCurrency(amount.getCurrency());
+
+        transaction.setDescription(description);
+
+        return transactionRepository.save(transaction);
+    }
+
+    @Transactional
     public Transaction recordDeposit(
             Wallet wallet,
             Money amount,
