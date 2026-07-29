@@ -5,6 +5,9 @@ public enum TransactionStatus {
     SUCCESS,
     WITHDRAWAL,
     TRANSFER_IN,
-    TRANSFER_OUT
+    TRANSFER_OUT,
+    FAILED,
+    PENDING,
+    REVERSED
     
 }

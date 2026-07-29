@@ -9,4 +9,6 @@ public interface JournalRepository extends JpaRepository<Journal, Long> {
 
     Optional<Journal> findByJournalReference(String journalReference);
 
+    boolean existsByReversedJournal(Journal journal);
+
 }

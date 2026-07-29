@@ -48,4 +48,8 @@ public class Journal {
 
     private LocalDateTime postedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reversed_journal_id")
+    private Journal reversedJournal;
+
 }

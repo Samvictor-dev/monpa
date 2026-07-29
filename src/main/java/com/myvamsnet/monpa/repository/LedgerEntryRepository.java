@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.repository;
 
+import com.myvamsnet.monpa.model.Journal;
 import com.myvamsnet.monpa.model.LedgerEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,5 +10,7 @@ public interface LedgerEntryRepository
         extends JpaRepository<LedgerEntry, Long> {
 
     List<LedgerEntry> findByJournalId(Long journalId);
+
+    List<LedgerEntry> findByJournal(Journal journal);
 
 }

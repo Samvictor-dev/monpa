@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.accounting;
 
+import com.myvamsnet.monpa.accounting.validator.JournalValidator;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.JournalRepository;
@@ -7,10 +8,7 @@ import com.myvamsnet.monpa.repository.LedgerEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 
 @Service
@@ -19,7 +17,11 @@ public class JournalService {
 
     private final JournalRepository journalRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
-    private final LedgerAccountService ledgerAccountService;
+
+    private final PostingService postingService;
+    private final JournalValidator journalValidator;
+
+    LocalDateTime now = LocalDateTime.now();
 
 
     public Journal createJournal(
@@ -44,7 +46,7 @@ public class JournalService {
 
         journal.setNarration(narration);
 
-        journal.setCreatedAt(LocalDateTime.now());
+        journal.setCreatedAt(now);
 
         return journalRepository.save(journal);
 
@@ -57,25 +59,13 @@ public class JournalService {
             String description
     ) {
 
-        LedgerEntry entry = new LedgerEntry();
-
-        entry.setJournal(journal);
-
-        entry.setLedgerAccount(account);
-
-        entry.setEntryType(LedgerEntryType.DEBIT);
-
-        entry.setMoney(money);
-
-        entry.setDescription(description);
-
-        entry.setReference(
-                journal.getJournalReference() + "-DR"
+        return createEntry(
+                journal,
+                account,
+                LedgerEntryType.DEBIT,
+                money,
+                description
         );
-
-        entry.setCreatedAt(LocalDateTime.now());
-
-        return ledgerEntryRepository.save(entry);
 
     }
 
@@ -86,209 +76,52 @@ public class JournalService {
             String description
     ) {
 
+        return createEntry(
+                journal,
+                account,
+                LedgerEntryType.CREDIT,
+                money,
+                description
+        );
+
+    }
+
+    private LedgerEntry createEntry(
+            Journal journal,
+            LedgerAccount account,
+            LedgerEntryType entryType,
+            Money money,
+            String description
+    ) {
+
         LedgerEntry entry = new LedgerEntry();
 
         entry.setJournal(journal);
-
         entry.setLedgerAccount(account);
-
-        entry.setEntryType(LedgerEntryType.CREDIT);
-
+        entry.setEntryType(entryType);
         entry.setMoney(money);
-
         entry.setDescription(description);
 
+        String suffix = switch (entryType) {
+            case DEBIT -> "-DR";
+            case CREDIT -> "-CR";
+        };
+
         entry.setReference(
-                journal.getJournalReference() + "-CR"
+                journal.getJournalReference() + suffix
         );
 
-        entry.setCreatedAt(LocalDateTime.now());
+        entry.setCreatedAt(now);
 
         return ledgerEntryRepository.save(entry);
-
-    }
-
-    public void postJournal(Journal journal) {
-
-        journal.setStatus(JournalStatus.POSTED);
-
-        journal.setPostedAt(LocalDateTime.now());
-
-        journalRepository.save(journal);
-
     }
 
     @Transactional
-    public Journal recordDeposit(
-            Wallet wallet,
-            Money money,
-            String narration
-    ) {
+    public void validateAndPost(Journal journal) {
 
-        Journal journal = createJournal(
-                JournalType.DEPOSIT,
-                money,
-                narration
-        );
+        journalValidator.validate(journal);
 
-        LedgerAccount cashAccount =
-                ledgerAccountService.getRequiredAccount(
-                        LedgerAccountType.CASH
-                );
-
-        LedgerAccount customerLiability =
-                ledgerAccountService.getRequiredAccount(
-                        LedgerAccountType.CUSTOMER_LIABILITY
-                );
-
-        createDebitEntry(
-                journal,
-                cashAccount,
-                money,
-                "Cash received"
-        );
-
-        createCreditEntry(
-                journal,
-                customerLiability,
-                money,
-                "Customer wallet funded"
-        );
-
-        validateJournal(journal);
-
-        postJournal(journal);
-
-        return journal;
-
-    }
-
-    @Transactional
-    public Journal recordWithdrawal(
-            Wallet wallet,
-            Money money,
-            String narration
-    ) {
-
-        Journal journal = createJournal(
-                JournalType.WITHDRAWAL,
-                money,
-                narration
-        );
-
-        LedgerAccount customerLiability =
-                ledgerAccountService.getRequiredAccount(
-                        LedgerAccountType.CUSTOMER_LIABILITY
-                );
-
-        LedgerAccount cash =
-                ledgerAccountService.getRequiredAccount(
-                        LedgerAccountType.CASH
-                );
-
-        createDebitEntry(
-                journal,
-                customerLiability,
-                money,
-                "Customer withdrawal"
-        );
-
-        createCreditEntry(
-                journal,
-                cash,
-                money,
-                "Cash paid out"
-        );
-
-        validateJournal(journal);
-
-        postJournal(journal);
-
-        return journal;
-
-    }
-
-    @Transactional
-    public Journal recordTransfer(
-            Wallet senderWallet,
-            Wallet receiverWallet,
-            Money money,
-            String narration
-    ) {
-
-        Journal journal = createJournal(
-                JournalType.TRANSFER,
-                money,
-                narration
-        );
-
-
-        LedgerAccount customerLiability =
-                ledgerAccountService.getRequiredAccount(
-                        LedgerAccountType.CUSTOMER_LIABILITY
-                );
-
-        createDebitEntry(
-                journal,
-                customerLiability,
-                money,
-                "Transfer from "
-                        + senderWallet.getAccountNumber()
-        );
-
-        createCreditEntry(
-                journal,
-                customerLiability,
-                money,
-                "Transfer to "
-                        + receiverWallet.getAccountNumber()
-        );
-
-        validateJournal(journal);
-
-        postJournal(journal);
-
-        return journal;
-    }
-
-    private void validateJournal(
-            Journal journal
-    ) {
-
-        List<LedgerEntry> entries =
-                ledgerEntryRepository.findByJournalId(
-                        journal.getId()
-                );
-
-        BigDecimal debit = BigDecimal.ZERO;
-
-        BigDecimal credit = BigDecimal.ZERO;
-
-        for (LedgerEntry entry : entries) {
-
-            if (entry.getEntryType() == LedgerEntryType.DEBIT) {
-
-                debit = debit.add(
-                        entry.getMoney().getAmount()
-                );
-
-            } else {
-
-                credit = credit.add(
-                        entry.getMoney().getAmount()
-                );
-
-            }
-
-        }
-
-        if (debit.compareTo(credit) != 0) {
-
-            throw new IllegalStateException(
-                    "Journal is not balanced."
-            );
-
-        }
+        postingService.post(journal);
 
     }
 

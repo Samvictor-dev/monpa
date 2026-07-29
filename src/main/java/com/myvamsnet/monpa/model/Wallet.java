@@ -132,6 +132,8 @@ public class Wallet {
 
         validateCurrency(amount);
 
+        ensureActive();
+
         if(balance.compareTo(amount.getAmount()) < 0){
 
             throw new IllegalStateException(
@@ -205,5 +207,4 @@ public class Wallet {
 
         return balance.compareTo(amount.getAmount()) >= 0;
     }
-
 }

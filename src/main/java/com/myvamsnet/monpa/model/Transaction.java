@@ -58,6 +58,10 @@ public class Transaction {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reversal_transaction_id")
+    private Transaction reversalTransaction;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

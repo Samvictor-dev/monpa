@@ -1,10 +1,14 @@
 package com.myvamsnet.monpa.controller.admin;
 
+import com.myvamsnet.monpa.admin.TransactionReversalService;
+import com.myvamsnet.monpa.dto.common.ApiResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.AdminTransactionFilter;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
+import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.service.AdminTransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 public class AdminTransactionController {
 
     private final AdminTransactionService adminTransactionService;
+
+    private final TransactionReversalService transactionReversalService;
 
     @GetMapping
     public PagedResponse<TransactionHistoryResponse> getAllTransactions(
@@ -36,5 +42,28 @@ public class AdminTransactionController {
         );
 
     }
+
+    @PostMapping("/{transactionReference}/reverse")
+    public ResponseEntity<ApiResponse<TransactionResponse>> reverse(
+            @PathVariable String transactionReference
+    ) {
+
+        TransactionResponse response =
+                transactionReversalService.reverse(
+                        transactionReference
+                );
+
+        return ResponseEntity.ok(
+
+                ApiResponse.success(
+                        "Transaction reversed successfully.",
+                        response
+                )
+
+        );
+
+    }
+
+
 
 }

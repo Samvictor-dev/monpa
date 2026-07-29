@@ -1,7 +1,7 @@
 package com.myvamsnet.monpa.service;
 
 
-import com.myvamsnet.monpa.accounting.JournalService;
+import com.myvamsnet.monpa.accounting.AccountingService;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.dto.wallet.DepositRequest;
@@ -32,7 +32,7 @@ public class WalletService {
 
     private final TransactionService transactionService;
 
-    private final JournalService journalService;
+    private final AccountingService accountingService;
 
 
     @Transactional
@@ -108,7 +108,7 @@ public class WalletService {
                 wallet.getCurrency()
         );
 
-        Journal journal = journalService.recordDeposit(
+        Journal journal = accountingService.recordDeposit(
                 wallet,
                 depositAmount,
                 "Deposit into wallet "
@@ -192,7 +192,7 @@ public class WalletService {
         );
 
         Journal journal =
-                journalService.recordWithdrawal(
+                accountingService.recordWithdrawal(
                         wallet,
                         money,
                         "Withdrawal from wallet "
