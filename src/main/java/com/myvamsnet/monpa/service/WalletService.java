@@ -1,6 +1,7 @@
 package com.myvamsnet.monpa.service;
 
 
+import com.myvamsnet.monpa.accounting.JournalService;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.dto.wallet.DepositRequest;

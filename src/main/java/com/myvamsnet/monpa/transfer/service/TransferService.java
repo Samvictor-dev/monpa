@@ -3,6 +3,8 @@ package com.myvamsnet.monpa.transfer.service;
 
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
+import com.myvamsnet.monpa.model.Journal;
+import com.myvamsnet.monpa.accounting.JournalService;
 import com.myvamsnet.monpa.transfer.dto.TransferRequest;
 import com.myvamsnet.monpa.mapper.TransactionMapper;
 import com.myvamsnet.monpa.model.Transaction;
@@ -28,6 +30,8 @@ public class TransferService {
 
     private final TransferValidator transferValidator;
     private final TransactionService transactionService;
+
+    private final JournalService journalService;
 
 
     @Transactional
@@ -83,6 +87,19 @@ public class TransferService {
                 amount
         );
 
+//        5a) Post Journal
+
+        Journal journal =
+                journalService.recordTransfer(
+                        senderWallet,
+                        receiverWallet,
+                        amount,
+                        "Transfer from "
+                                + senderWallet.getAccountNumber()
+                                + " to "
+                                + receiverWallet.getAccountNumber()
+                );
+
 //        walletService.withdraw(
 //                senderWallet,
 //                amount
@@ -128,12 +145,17 @@ public class TransferService {
                         transferReference
                 );
 
-        transactionService.recordTransferIn(
+        Transaction receiverTransaction =
+                transactionService.recordTransferIn(
                 receiverWallet,
                 amount,
                 receiverDescription,
                 transferReference
         );
+
+        senderTransaction.setJournal(journal);
+
+        receiverTransaction.setJournal(journal);
 
         return transactionMapper.toResponse(senderTransaction);
 

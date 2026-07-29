@@ -1,12 +1,9 @@
-package com.myvamsnet.monpa.service;
+package com.myvamsnet.monpa.accounting;
 
-import com.myvamsnet.monpa.common.exception.LedgerAccountNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.JournalRepository;
-import com.myvamsnet.monpa.repository.LedgerAccountRepository;
 import com.myvamsnet.monpa.repository.LedgerEntryRepository;
-import com.myvamsnet.monpa.util.ReferenceGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +19,7 @@ public class JournalService {
 
     private final JournalRepository journalRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
-    private final LedgerAccountRepository ledgerAccountRepository;
+    private final LedgerAccountService ledgerAccountService;
 
 
     public Journal createJournal(
@@ -135,20 +132,14 @@ public class JournalService {
         );
 
         LedgerAccount cashAccount =
-                ledgerAccountRepository
-                        .findByType(LedgerAccountType.CASH)
-                        .orElseThrow(() ->
-                                new LedgerAccountNotFoundException(
-                                        LedgerAccountType.CASH
-                                ));
+                ledgerAccountService.getRequiredAccount(
+                        LedgerAccountType.CASH
+                );
 
         LedgerAccount customerLiability =
-                ledgerAccountRepository
-                        .findByType(LedgerAccountType.CUSTOMER_LIABILITY)
-                        .orElseThrow(() ->
-                                new LedgerAccountNotFoundException(
-                                        LedgerAccountType.CUSTOMER_LIABILITY
-                                ));
+                ledgerAccountService.getRequiredAccount(
+                        LedgerAccountType.CUSTOMER_LIABILITY
+                );
 
         createDebitEntry(
                 journal,
@@ -186,24 +177,14 @@ public class JournalService {
         );
 
         LedgerAccount customerLiability =
-                ledgerAccountRepository
-                        .findByType(
-                                LedgerAccountType.CUSTOMER_LIABILITY
-                        )
-                        .orElseThrow(() ->
-                                new LedgerAccountNotFoundException(
-                                        LedgerAccountType.CUSTOMER_LIABILITY
-                                ));
+                ledgerAccountService.getRequiredAccount(
+                        LedgerAccountType.CUSTOMER_LIABILITY
+                );
 
         LedgerAccount cash =
-                ledgerAccountRepository
-                        .findByType(
-                                LedgerAccountType.CASH
-                        )
-                        .orElseThrow(() ->
-                                new LedgerAccountNotFoundException(
-                                        LedgerAccountType.CASH
-                                ));
+                ledgerAccountService.getRequiredAccount(
+                        LedgerAccountType.CASH
+                );
 
         createDebitEntry(
                 journal,
@@ -225,6 +206,49 @@ public class JournalService {
 
         return journal;
 
+    }
+
+    @Transactional
+    public Journal recordTransfer(
+            Wallet senderWallet,
+            Wallet receiverWallet,
+            Money money,
+            String narration
+    ) {
+
+        Journal journal = createJournal(
+                JournalType.TRANSFER,
+                money,
+                narration
+        );
+
+
+        LedgerAccount customerLiability =
+                ledgerAccountService.getRequiredAccount(
+                        LedgerAccountType.CUSTOMER_LIABILITY
+                );
+
+        createDebitEntry(
+                journal,
+                customerLiability,
+                money,
+                "Transfer from "
+                        + senderWallet.getAccountNumber()
+        );
+
+        createCreditEntry(
+                journal,
+                customerLiability,
+                money,
+                "Transfer to "
+                        + receiverWallet.getAccountNumber()
+        );
+
+        validateJournal(journal);
+
+        postJournal(journal);
+
+        return journal;
     }
 
     private void validateJournal(

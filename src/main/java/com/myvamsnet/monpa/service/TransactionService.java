@@ -72,7 +72,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public void recordTransferIn(
+    public Transaction recordTransferIn(
             Wallet wallet,
             Money amount,
             String description,
@@ -99,6 +99,8 @@ public class TransactionService {
         transaction.setDescription(description);
 
         transactionRepository.save(transaction);
+
+        return transaction;
     }
 
     public String generateTransactionReference() {

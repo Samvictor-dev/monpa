@@ -1,4 +1,4 @@
-package com.myvamsnet.monpa.util;
+package com.myvamsnet.monpa.accounting;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
