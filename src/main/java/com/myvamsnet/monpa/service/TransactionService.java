@@ -131,9 +131,7 @@ public class TransactionService {
 
         Transaction transaction = new Transaction();
 
-        transaction.setTransactionReference(generateTransactionReference());
-
-        transaction.setTransferReference(reference);
+        transaction.setTransactionReference(reference);
 
         transaction.setWallet(wallet);
 

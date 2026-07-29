@@ -1,15 +1,30 @@
 package com.myvamsnet.monpa.common.valueobject;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
-public final class Money {
+@Getter
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Money {
 
     private static final int SCALE = 2;
 
-    private final BigDecimal amount;
-    private final Currency currency;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
+    private Currency currency;
 
     private Money(BigDecimal amount, Currency currency) {
 

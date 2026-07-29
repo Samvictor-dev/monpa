@@ -22,4 +22,17 @@ public final class ReferenceGenerator {
 
     }
 
+    public static String generateLedgerEntryReference() {
+
+        return "LED-"
+                + LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                + "-"
+                + UUID.randomUUID()
+                .toString()
+                .substring(0, 6)
+                .toUpperCase();
+
+    }
+
 }

@@ -71,6 +71,10 @@ public class JournalService {
 
         entry.setDescription(description);
 
+        entry.setReference(
+                journal.getJournalReference() + "-DR"
+        );
+
         entry.setCreatedAt(LocalDateTime.now());
 
         return ledgerEntryRepository.save(entry);
@@ -95,6 +99,10 @@ public class JournalService {
         entry.setMoney(money);
 
         entry.setDescription(description);
+
+        entry.setReference(
+                journal.getJournalReference() + "-CR"
+        );
 
         entry.setCreatedAt(LocalDateTime.now());
 

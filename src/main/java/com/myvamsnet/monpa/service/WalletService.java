@@ -107,7 +107,7 @@ public class WalletService {
                 wallet.getCurrency()
         );
 
-        journalService.recordDeposit(
+        Journal journal = journalService.recordDeposit(
                 wallet,
                 depositAmount,
                 "Deposit into wallet "
@@ -127,6 +127,8 @@ public class WalletService {
                         request.getDescription(),
                         transactionReference
                 );
+
+        transaction.setJournal(journal);
 
         return transactionMapper.toResponse(transaction);
 
