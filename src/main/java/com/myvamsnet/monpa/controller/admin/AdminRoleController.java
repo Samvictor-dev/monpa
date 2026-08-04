@@ -1,7 +1,7 @@
 package com.myvamsnet.monpa.controller.admin;
 
 import org.springframework.security.core.Authentication;
-import com.myvamsnet.monpa.service.AdminRoleService;
+import com.myvamsnet.monpa.service.admin.AdminRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

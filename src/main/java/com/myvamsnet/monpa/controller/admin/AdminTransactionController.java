@@ -6,7 +6,7 @@ import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.AdminTransactionFilter;
 import com.myvamsnet.monpa.dto.transaction.TransactionHistoryResponse;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
-import com.myvamsnet.monpa.service.AdminTransactionService;
+import com.myvamsnet.monpa.service.admin.AdminTransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

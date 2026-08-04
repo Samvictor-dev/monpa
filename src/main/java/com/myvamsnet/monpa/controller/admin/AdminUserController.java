@@ -3,7 +3,7 @@ package com.myvamsnet.monpa.controller.admin;
 import com.myvamsnet.monpa.dto.admin.AdminUserFilter;
 import com.myvamsnet.monpa.dto.admin.AdminUserResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
-import com.myvamsnet.monpa.service.AdminUserService;
+import com.myvamsnet.monpa.service.admin.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

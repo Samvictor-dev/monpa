@@ -55,6 +55,14 @@ public class ReversalService {
                 narration
         );
 
+        reversalJournal.setAmount(
+                originalJournal.getAmount()
+        );
+
+        reversalJournal.setCurrency(
+                originalJournal.getCurrency()
+        );
+
         reversalJournal.setCreatedAt(now);
 
         reversalJournal.setReversedJournal(

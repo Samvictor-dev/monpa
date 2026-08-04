@@ -35,9 +35,11 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Currency currency;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "transaction_status", nullable = false)
     private TransactionStatus status;
 

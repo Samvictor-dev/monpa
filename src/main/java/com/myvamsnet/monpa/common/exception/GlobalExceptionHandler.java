@@ -244,14 +244,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse> handleBadCredentials(BadCredentialsException ex) {
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleBadCredentials(BadCredentialsException ex) {
 
-        ApiResponse response = new ApiResponse(
-                false,
-                "Invalid email or password"
+        ErrorResponse response = new ErrorResponse (
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage()
         );
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiResponse.error(
+                        "Invalid email or password.",
+                        response
+                )
+        );
     }
 
     @ExceptionHandler(InsufficientFundsException.class)

@@ -1,4 +1,4 @@
-package com.myvamsnet.monpa.service;
+package com.myvamsnet.monpa.service.admin;
 
 import com.myvamsnet.monpa.common.exception.InvalidRoleOperationException;
 import com.myvamsnet.monpa.model.AccountStatus;
