@@ -25,9 +25,7 @@ public class TransactionReversalService {
     private final TransactionMapper transactionMapper;
 
     public TransactionResponse reverse(
-
             String transactionReference
-
     ) {
 
         Transaction transaction =
@@ -37,7 +35,6 @@ public class TransactionReversalService {
                                 new TransactionNotFoundException(
                                         transactionReference
                                 ));
-
 
         if (transaction.getStatus() != TransactionStatus.SUCCESS) {
 
@@ -54,6 +51,48 @@ public class TransactionReversalService {
                                 + transaction.getTransactionReference()
                 );
 
+        switch (transaction.getType()) {
+
+            case DEPOSIT -> reverseDeposit(
+                    transaction,
+                    reversalJournal
+            );
+
+            case WITHDRAWAL -> reverseWithdrawal(
+                    transaction,
+                    reversalJournal
+            );
+
+            case TRANSFER_OUT ->
+                    reverseTransferOut(
+                            transaction,
+                            reversalJournal
+                    );
+
+            case TRANSFER_IN ->
+                    throw new InvalidTransactionStateException(
+                            "Reverse the outgoing transfer transaction instead."
+                    );
+
+            default -> throw new InvalidTransactionStateException(
+                    "Unsupported transaction type."
+            );
+
+        }
+
+        transactionRepository.save(transaction);
+
+        return transactionMapper.toResponse(
+                transaction.getReversalTransaction()
+        );
+
+    }
+
+    private void reverseDeposit(
+            Transaction transaction,
+            Journal reversalJournal
+    ) {
+
         Wallet wallet = transaction.getWallet();
 
         Money money = Money.of(
@@ -61,23 +100,130 @@ public class TransactionReversalService {
                 wallet.getCurrency()
         );
 
-        switch (transaction.getType()) {
+        wallet.withdraw(money);
 
-            case DEPOSIT -> wallet.withdraw(money);
+        walletRepository.save(wallet);
 
-            case WITHDRAWAL -> wallet.deposit(money);
+        createReversalTransaction(
+                transaction,
+                reversalJournal,
+                wallet
+        );
 
-            case TRANSFER_OUT -> wallet.deposit(money);
+    }
 
-            case TRANSFER_IN -> wallet.withdraw(money);
+    private void reverseWithdrawal(
+            Transaction transaction,
+            Journal reversalJournal
+    ) {
 
-            default -> throw new InvalidTransactionStateException(
-                    "Unsupported transaction type for reversal."
+        Wallet wallet = transaction.getWallet();
+
+        Money money = Money.of(
+                transaction.getAmount(),
+                wallet.getCurrency()
+        );
+
+        wallet.deposit(money);
+
+        walletRepository.save(wallet);
+
+        createReversalTransaction(
+                transaction,
+                reversalJournal,
+                wallet
+        );
+
+    }
+
+    private void reverseTransferOut(
+            Transaction outgoingTransaction,
+            Journal reversalJournal
+    ) {
+
+        Transaction incomingTransaction =
+                transactionRepository
+                        .findByTransferReferenceAndType(
+                                outgoingTransaction.getTransferReference(),
+                                TransactionType.TRANSFER_IN
+                        )
+                        .orElseThrow(() ->
+                                new TransactionNotFoundException(
+                                        "Matching incoming transfer not found."
+                                ));
+
+        if (incomingTransaction.getStatus() != TransactionStatus.SUCCESS) {
+
+            throw new InvalidTransactionStateException(
+                    "Unsupported or Transfer has already been reversed."
             );
 
         }
 
+        Wallet senderWallet =
+                outgoingTransaction.getWallet();
+
+        Wallet receiverWallet =
+                incomingTransaction.getWallet();
+
+        Money money = Money.of(
+                outgoingTransaction.getAmount(),
+                senderWallet.getCurrency()
+        );
+
+        // Refund sender
+        senderWallet.deposit(money);
+
+        // Remove money from receiver
+        receiverWallet.withdraw(money);
+
+        walletRepository.save(senderWallet);
+
+        walletRepository.save(receiverWallet);
+
+        createReversalTransaction(
+                outgoingTransaction,
+                reversalJournal,
+                senderWallet
+        );
+
+        createReversalTransaction(
+                incomingTransaction,
+                reversalJournal,
+                receiverWallet
+        );
+
+    }
+
+    private void reverseTransferIn(
+            Transaction transaction,
+            Journal reversalJournal
+    ) {
+
+        Wallet wallet = transaction.getWallet();
+
+        Money money = Money.of(
+                transaction.getAmount(),
+                wallet.getCurrency()
+        );
+
+        wallet.withdraw(money);
+
         walletRepository.save(wallet);
+
+        createReversalTransaction(
+                transaction,
+                reversalJournal,
+                wallet
+        );
+
+    }
+
+    private void createReversalTransaction(
+            Transaction transaction,
+            Journal reversalJournal,
+            Wallet wallet
+    ) {
 
         Transaction reversal = new Transaction();
 
@@ -115,7 +261,7 @@ public class TransactionReversalService {
 
         reversal.setDescription(
                 "Reversal of "
-                        + transaction.getTransactionReference()
+                        + transaction.getDescription()
         );
 
         reversal.setBalanceAfterTransaction(
@@ -134,12 +280,130 @@ public class TransactionReversalService {
                 transaction
         );
 
-        transactionRepository.save(transaction);
-
-        transactionRepository.save(reversal);
-
-        return transactionMapper.toResponse(reversal);
+        transactionRepository.save(
+                reversal
+        );
 
     }
 
 }
+
+//    public TransactionResponse reverse(
+//
+//            String transactionReference
+//
+//    ) {
+//
+//        Transaction transaction =
+//                transactionRepository
+//                        .findByTransactionReference(transactionReference)
+//                        .orElseThrow(() ->
+//                                new TransactionNotFoundException(
+//                                        transactionReference
+//                                ));
+//
+//
+//        if (transaction.getStatus() != TransactionStatus.SUCCESS) {
+//
+//            throw new InvalidTransactionStateException(
+//                    "Only successful transactions can be reversed."
+//            );
+//
+//        }
+//
+//        Journal reversalJournal =
+//                reversalService.reverse(
+//                        transaction.getJournal(),
+//                        "Reversal of "
+//                                + transaction.getTransactionReference()
+//                );
+//
+//        Wallet wallet = transaction.getWallet();
+//
+//        Money money = Money.of(
+//                transaction.getAmount(),
+//                wallet.getCurrency()
+//        );
+//
+//        switch (transaction.getType()) {
+//
+//            case DEPOSIT -> wallet.withdraw(money);
+//
+//            case WITHDRAWAL -> wallet.deposit(money);
+//
+//            case TRANSFER_OUT -> wallet.deposit(money);
+//
+//            case TRANSFER_IN -> wallet.withdraw(money);
+//
+//            default -> throw new InvalidTransactionStateException(
+//                    "Unsupported transaction type for reversal."
+//            );
+//
+//        }
+//
+//        walletRepository.save(wallet);
+//
+//        Transaction reversal = new Transaction();
+//
+//        reversal.setTransactionReference(
+//                ReferenceGenerator.generateTransactionReference()
+//        );
+//
+//        reversal.setTransferReference(
+//                transaction.getTransferReference()
+//        );
+//
+//        reversal.setType(
+//                transaction.getType()
+//        );
+//
+//        reversal.setAmount(
+//                transaction.getAmount()
+//        );
+//
+//        reversal.setCurrency(
+//                transaction.getCurrency()
+//        );
+//
+//        reversal.setStatus(
+//                TransactionStatus.SUCCESS
+//        );
+//
+//        reversal.setWallet(
+//                wallet
+//        );
+//
+//        reversal.setJournal(
+//                reversalJournal
+//        );
+//
+//        reversal.setDescription(
+//                "Reversal of "
+//                        + transaction.getTransactionReference()
+//        );
+//
+//        reversal.setBalanceAfterTransaction(
+//                wallet.getBalance()
+//        );
+//
+//        transaction.setStatus(
+//                TransactionStatus.REVERSED
+//        );
+//
+//        transaction.setReversalTransaction(
+//                reversal
+//        );
+//
+//        reversal.setReversalTransaction(
+//                transaction
+//        );
+//
+//        transactionRepository.save(transaction);
+//
+//        transactionRepository.save(reversal);
+//
+//        return transactionMapper.toResponse(reversal);
+//
+//    }
+//
+//}

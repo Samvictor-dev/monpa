@@ -31,4 +31,9 @@ public interface TransactionRepository
             Pageable pageable
     );
 
+    Optional<Transaction> findByTransferReferenceAndType(
+            String transferReference,
+            TransactionType type
+    );
+
 }
