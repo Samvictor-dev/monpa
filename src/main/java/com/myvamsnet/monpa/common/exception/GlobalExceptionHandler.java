@@ -5,6 +5,7 @@ import com.myvamsnet.monpa.dto.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -308,6 +309,27 @@ public class GlobalExceptionHandler {
 
                 request
         );
+    }
+
+    @ExceptionHandler(
+            ObjectOptimisticLockingFailureException.class
+    )
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException ex
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(
+
+                        ApiResponse.error(
+
+                                "Another transaction modified this wallet. Please try again."
+
+                        )
+
+                );
+
     }
 
 }

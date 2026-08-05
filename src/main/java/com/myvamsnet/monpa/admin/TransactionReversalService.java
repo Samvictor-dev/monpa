@@ -195,29 +195,29 @@ public class TransactionReversalService {
 
     }
 
-    private void reverseTransferIn(
-            Transaction transaction,
-            Journal reversalJournal
-    ) {
-
-        Wallet wallet = transaction.getWallet();
-
-        Money money = Money.of(
-                transaction.getAmount(),
-                wallet.getCurrency()
-        );
-
-        wallet.withdraw(money);
-
-        walletRepository.save(wallet);
-
-        createReversalTransaction(
-                transaction,
-                reversalJournal,
-                wallet
-        );
-
-    }
+//    private void reverseTransferIn(
+//            Transaction transaction,
+//            Journal reversalJournal
+//    ) {
+//
+//        Wallet wallet = transaction.getWallet();
+//
+//        Money money = Money.of(
+//                transaction.getAmount(),
+//                wallet.getCurrency()
+//        );
+//
+//        wallet.withdraw(money);
+//
+//        walletRepository.save(wallet);
+//
+//        createReversalTransaction(
+//                transaction,
+//                reversalJournal,
+//                wallet
+//        );
+//
+//    }
 
     private void createReversalTransaction(
             Transaction transaction,
