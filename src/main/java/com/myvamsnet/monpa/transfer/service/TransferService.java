@@ -2,6 +2,9 @@ package com.myvamsnet.monpa.transfer.service;
 
 
 import com.myvamsnet.monpa.accounting.AccountingService;
+import com.myvamsnet.monpa.common.concurrency.OptimisticLockExecutor;
+import com.myvamsnet.monpa.common.exception.UserNotFoundException;
+import com.myvamsnet.monpa.common.exception.WalletNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.model.Journal;
@@ -33,6 +36,7 @@ public class TransferService {
 
     private final AccountingService accountingService;
 
+    private final OptimisticLockExecutor optimisticLockExecutor;
 
     @Transactional
     public TransactionResponse transfer(
@@ -40,54 +44,86 @@ public class TransferService {
             String email,
 
             TransferRequest request
-    ){
 
-//        1) Load Sender
+    ) {
 
         User senderUser =
                 userRepository.findByEmail(email)
                         .orElseThrow(() ->
-                                new RuntimeException("User not found"));
-
-
-//        2) Load Sender Wallet
+                                new UserNotFoundException(email));
 
         Wallet senderWallet =
                 walletRepository.findByUser(senderUser)
                         .orElseThrow(() ->
-                                new RuntimeException("Wallet not found"));
-
-
-
-//        3) Load Receiver
+                                new WalletNotFoundException(senderUser.getId()));
 
         Wallet receiverWallet =
                 walletRepository.findByAccountNumber(
                                 request.getDestinationAccountNumber()
                         )
                         .orElseThrow(() ->
-                                new RuntimeException("Destination wallet not found"));
-
-
-//        4) Convert to Money
-
-        Money amount = Money.of(
-
-                request.getAmount(),
-
-                senderWallet.getCurrency()
-
-        );
-
-//        5) Prevent Self Transfer and that wallets are active
+                                new WalletNotFoundException(
+                                        request.getDestinationAccountNumber()
+                                ));
 
         transferValidator.validate(
                 senderWallet,
                 receiverWallet,
-                amount
+                Money.of(
+                        request.getAmount(),
+                        senderWallet.getCurrency()
+                )
         );
 
-//        5a) Post Journal
+        return optimisticLockExecutor.execute(
+
+                () -> performTransfer(
+
+                        senderWallet.getId(),
+
+                        receiverWallet.getId(),
+
+                        request
+
+                )
+
+        );
+
+    }
+
+    private TransactionResponse performTransfer(
+
+            Long senderWalletId,
+
+            Long receiverWalletId,
+
+            TransferRequest request
+
+    ) {
+
+        Wallet senderWallet =
+                walletRepository.findById(senderWalletId)
+                        .orElseThrow(() ->
+                                new WalletNotFoundException(senderWalletId));
+
+        Wallet receiverWallet =
+                walletRepository.findById(receiverWalletId)
+                        .orElseThrow(() ->
+                                new WalletNotFoundException(receiverWalletId));
+
+        Money amount =
+                Money.of(
+                        request.getAmount(),
+                        senderWallet.getCurrency()
+                );
+
+        senderWallet.withdraw(amount);
+
+        receiverWallet.deposit(amount);
+
+        walletRepository.save(senderWallet);
+
+        walletRepository.save(receiverWallet);
 
         Journal journal =
                 accountingService.recordTransfer(
@@ -100,39 +136,13 @@ public class TransferService {
                                 + receiverWallet.getAccountNumber()
                 );
 
-//        walletService.withdraw(
-//                senderWallet,
-//                amount
-//        );
-//
-//        walletService.deposit(
-//                receiverWallet,
-//                amount
-//        );
-
-        //        5) Debit Sender
-
-        senderWallet.withdraw(amount);
-
-//        6) Credit Receiver
-
-        receiverWallet.deposit(amount);
-
-//        7) Save Both Wallets
-
-        walletRepository.save(senderWallet);
-
-        walletRepository.save(receiverWallet);
-
-//        8) Record Transactions
-
         String senderDescription =
-                "Transfer to " +
-                        receiverWallet.getAccountNumber();
+                "Transfer to "
+                        + receiverWallet.getAccountNumber();
 
         String receiverDescription =
-                "Transfer from " +
-                        senderWallet.getAccountNumber();
+                "Transfer from "
+                        + senderWallet.getAccountNumber();
 
         String transferReference =
                 transactionService.generateTransferReference();
@@ -147,19 +157,150 @@ public class TransferService {
 
         Transaction receiverTransaction =
                 transactionService.recordTransferIn(
-                receiverWallet,
-                amount,
-                receiverDescription,
-                transferReference
-        );
+                        receiverWallet,
+                        amount,
+                        receiverDescription,
+                        transferReference
+                );
 
         senderTransaction.setJournal(journal);
 
         receiverTransaction.setJournal(journal);
 
-        return transactionMapper.toResponse(senderTransaction);
+        return transactionMapper.toResponse(
+                senderTransaction
+        );
 
     }
+
+//    @Transactional
+//    public TransactionResponse transfer(
+//
+//            String email,
+//
+//            TransferRequest request
+//    ){
+//
+//        1) Load Sender
+//
+//        User senderUser =
+//                userRepository.findByEmail(email)
+//                        .orElseThrow(() ->
+//                                new RuntimeException("User not found"));
+//
+//
+//        2) Load Sender Wallet
+//
+//        Wallet senderWallet =
+//                walletRepository.findByUser(senderUser)
+//                        .orElseThrow(() ->
+//                                new RuntimeException("Wallet not found"));
+//
+//
+//
+//        3) Load Receiver
+//
+//        Wallet receiverWallet =
+//                walletRepository.findByAccountNumber(
+//                                request.getDestinationAccountNumber()
+//                        )
+//                        .orElseThrow(() ->
+//                                new RuntimeException("Destination wallet not found"));
+//
+//
+//        4) Convert to Money
+//
+//        Money amount = Money.of(
+//
+//                request.getAmount(),
+//
+//                senderWallet.getCurrency()
+//
+//        );
+//
+//        5) Prevent Self Transfer and that wallets are active
+//
+//        transferValidator.validate(
+//                senderWallet,
+//                receiverWallet,
+//                amount
+//        );
+//
+//        5a) Post Journal
+//
+//        Journal journal =
+//                accountingService.recordTransfer(
+//                        senderWallet,
+//                        receiverWallet,
+//                        amount,
+//                        "Transfer from "
+//                                + senderWallet.getAccountNumber()
+//                                + " to "
+//                                + receiverWallet.getAccountNumber()
+//                );
+//
+//        *) This is not needed
+//
+//        walletService.withdraw(
+//                senderWallet,
+//                amount
+//        );
+//
+//        walletService.deposit(
+//                receiverWallet,
+//                amount
+//        );
+//
+//        5) Debit Sender
+//
+//        senderWallet.withdraw(amount);
+//
+//        6) Credit Receiver
+//
+//        receiverWallet.deposit(amount);
+//
+//        7) Save Both Wallets
+//
+//        walletRepository.save(senderWallet);
+//
+//        walletRepository.save(receiverWallet);
+//
+//        8) Record Transactions
+//
+//        String senderDescription =
+//                "Transfer to " +
+//                        receiverWallet.getAccountNumber();
+//
+//        String receiverDescription =
+//                "Transfer from " +
+//                        senderWallet.getAccountNumber();
+//
+//        String transferReference =
+//                transactionService.generateTransferReference();
+//
+//        Transaction senderTransaction =
+//                transactionService.recordTransferOut(
+//                        senderWallet,
+//                        amount,
+//                        senderDescription,
+//                        transferReference
+//                );
+//
+//        Transaction receiverTransaction =
+//                transactionService.recordTransferIn(
+//                receiverWallet,
+//                amount,
+//                receiverDescription,
+//                transferReference
+//        );
+//
+//        senderTransaction.setJournal(journal);
+//
+//        receiverTransaction.setJournal(journal);
+//
+//        return transactionMapper.toResponse(senderTransaction);
+//
+//    }
 
 }
 

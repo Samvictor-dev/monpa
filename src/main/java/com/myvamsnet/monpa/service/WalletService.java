@@ -2,6 +2,8 @@ package com.myvamsnet.monpa.service;
 
 
 import com.myvamsnet.monpa.accounting.AccountingService;
+import com.myvamsnet.monpa.common.concurrency.OptimisticLockExecutor;
+import com.myvamsnet.monpa.common.exception.UserNotFoundException;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.dto.wallet.DepositRequest;
@@ -34,6 +36,8 @@ public class WalletService {
 
     private final AccountingService accountingService;
 
+    private final OptimisticLockExecutor optimisticLockExecutor;
+
 
     @Transactional
     public void createWallet(User user) {
@@ -44,7 +48,6 @@ public class WalletService {
         walletRepository.save(wallet);
 
     }
-
 
 
 //    @Transactional
@@ -97,29 +100,57 @@ public class WalletService {
     ) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new UserNotFoundException(email));
 
         Wallet wallet = walletRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() ->
+                        new WalletNotFoundException(user.getId()));
 
-
-        Money depositAmount = Money.of(
-                request.getAmount(),
-                wallet.getCurrency()
+        return optimisticLockExecutor.execute(
+                () -> performDeposit(
+                        wallet.getId(),
+                        request
+                )
         );
 
-        Journal journal = accountingService.recordDeposit(
-                wallet,
-                depositAmount,
-                "Deposit into wallet "
-                        + wallet.getAccountNumber()
-        );
+    }
 
-        wallet.deposit(depositAmount);
+    private TransactionResponse performDeposit(
+
+            Long walletId,
+
+            DepositRequest request
+
+    ) {
+
+        Wallet wallet =
+                walletRepository.findById(walletId)
+                        .orElseThrow(() ->
+                                new WalletNotFoundException(walletId));
+
+        Money depositAmount =
+                Money.of(
+                        request.getAmount(),
+                        wallet.getCurrency()
+                );
+
+        wallet.deposit(
+                depositAmount
+        );
 
         walletRepository.save(wallet);
 
-        String transactionReference = transactionService.generateTransactionReference();
+        Journal journal =
+                accountingService.recordDeposit(
+                        wallet,
+                        depositAmount,
+                        "Deposit into wallet "
+                                + wallet.getAccountNumber()
+                );
+
+        String transactionReference =
+                transactionService.generateTransactionReference();
 
         Transaction transaction =
                 transactionService.recordDeposit(
@@ -129,11 +160,60 @@ public class WalletService {
                         transactionReference
                 );
 
-        transaction.setJournal(journal);
+        transaction.setJournal(
+                journal
+        );
 
-        return transactionMapper.toResponse(transaction);
+        return transactionMapper.toResponse(
+                transaction
+        );
 
     }
+
+//    @Transactional
+//    public TransactionResponse deposit(
+//            String email,
+//            DepositRequest request
+//    ) {
+//
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//        Wallet wallet = walletRepository.findByUser(user)
+//                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+//
+//
+//        Money depositAmount = Money.of(
+//                request.getAmount(),
+//                wallet.getCurrency()
+//        );
+//
+//        Journal journal = accountingService.recordDeposit(
+//                wallet,
+//                depositAmount,
+//                "Deposit into wallet "
+//                        + wallet.getAccountNumber()
+//        );
+//
+//        wallet.deposit(depositAmount);
+//
+//        walletRepository.save(wallet);
+//
+//        String transactionReference = transactionService.generateTransactionReference();
+//
+//        Transaction transaction =
+//                transactionService.recordDeposit(
+//                        wallet,
+//                        depositAmount,
+//                        request.getDescription(),
+//                        transactionReference
+//                );
+//
+//        transaction.setJournal(journal);
+//
+//        return transactionMapper.toResponse(transaction);
+//
+//    }
 
     @Transactional
     public WalletResponse freezeWallet(String email) {
@@ -169,55 +249,126 @@ public class WalletService {
 
     }
 
-
-
     @Transactional
     public WalletResponse withdraw(
             Long userId,
             WithdrawRequest request
     ) {
 
-        Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() ->
-                        new WalletNotFoundException(userId));
+        Wallet wallet =
+                walletRepository.findByUserId(userId)
+                        .orElseThrow(() ->
+                                new WalletNotFoundException(userId));
 
-        Money withdrawal = Money.of(
-                request.getAmount(),
-                wallet.getCurrency()
+        return optimisticLockExecutor.execute(
+
+                () -> performWithdrawal(
+
+                        wallet.getId(),
+
+                        request
+
+                )
+
         );
 
-        Money money = Money.of(
-                request.getAmount(),
-                wallet.getCurrency()
-        );
+    }
+
+    private WalletResponse performWithdrawal(
+
+            Long walletId,
+
+            WithdrawRequest request
+
+    ) {
+
+        Wallet wallet =
+                walletRepository.findById(walletId)
+                        .orElseThrow(() ->
+                                new WalletNotFoundException(walletId));
+
+        Money amount =
+                Money.of(
+                        request.getAmount(),
+                        wallet.getCurrency()
+                );
+
+        wallet.withdraw(amount);
+
+        walletRepository.save(wallet);
 
         Journal journal =
                 accountingService.recordWithdrawal(
                         wallet,
-                        money,
+                        amount,
                         "Withdrawal from wallet "
                                 + wallet.getAccountNumber()
                 );
-
-        wallet.withdraw(withdrawal);
-
-        walletRepository.save(wallet);
 
         String transactionReference =
                 transactionService.generateTransactionReference();
 
         Transaction transaction =
                 transactionService.recordWithdrawal(
-                wallet,
-                withdrawal,
-                "Wallet Withdrawal",
+                        wallet,
+                        amount,
+                        "Wallet Withdrawal",
                         transactionReference
-        );
+                );
 
         transaction.setJournal(journal);
 
         return walletMapper.toWalletResponse(wallet);
 
     }
+
+//    @Transactional
+//    public WalletResponse withdraw(
+//            Long userId,
+//            WithdrawRequest request
+//    ) {
+//
+//        Wallet wallet = walletRepository.findByUserId(userId)
+//                .orElseThrow(() ->
+//                        new WalletNotFoundException(userId));
+//
+//        Money withdrawal = Money.of(
+//                request.getAmount(),
+//                wallet.getCurrency()
+//        );
+//
+//        Money money = Money.of(
+//                request.getAmount(),
+//                wallet.getCurrency()
+//        );
+//
+//        Journal journal =
+//                accountingService.recordWithdrawal(
+//                        wallet,
+//                        money,
+//                        "Withdrawal from wallet "
+//                                + wallet.getAccountNumber()
+//                );
+//
+//        wallet.withdraw(withdrawal);
+//
+//        walletRepository.save(wallet);
+//
+//        String transactionReference =
+//                transactionService.generateTransactionReference();
+//
+//        Transaction transaction =
+//                transactionService.recordWithdrawal(
+//                wallet,
+//                withdrawal,
+//                "Wallet Withdrawal",
+//                        transactionReference
+//        );
+//
+//        transaction.setJournal(journal);
+//
+//        return walletMapper.toWalletResponse(wallet);
+//
+//    }
 
 }
