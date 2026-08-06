@@ -1,6 +1,6 @@
 package com.myvamsnet.monpa.controller.admin;
 
-import com.myvamsnet.monpa.admin.TransactionReversalService;
+import com.myvamsnet.monpa.application.reversal.ReverseTransactionUseCase;
 import com.myvamsnet.monpa.dto.common.ApiResponse;
 import com.myvamsnet.monpa.dto.common.PagedResponse;
 import com.myvamsnet.monpa.dto.transaction.AdminTransactionFilter;
@@ -20,7 +20,7 @@ public class AdminTransactionController {
 
     private final AdminTransactionService adminTransactionService;
 
-    private final TransactionReversalService transactionReversalService;
+    private final ReverseTransactionUseCase reverseTransactionUseCase;
 
     @GetMapping
     public PagedResponse<TransactionHistoryResponse> getAllTransactions(
@@ -49,7 +49,7 @@ public class AdminTransactionController {
     ) {
 
         TransactionResponse response =
-                transactionReversalService.reverse(
+                reverseTransactionUseCase.reverse(
                         transactionReference
                 );
 
