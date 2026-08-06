@@ -1,11 +1,12 @@
 package com.myvamsnet.monpa.controller.customer;
 
+import com.myvamsnet.monpa.application.deposit.DepositUseCase;
+import com.myvamsnet.monpa.application.withdraw.WithdrawUseCase;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.dto.wallet.DepositRequest;
 import com.myvamsnet.monpa.dto.wallet.WalletResponse;
 import com.myvamsnet.monpa.dto.wallet.WithdrawRequest;
 import com.myvamsnet.monpa.security.CustomUserDetails;
-import com.myvamsnet.monpa.service.TransactionService;
 import com.myvamsnet.monpa.service.WalletService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +21,14 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    private final TransactionService transactionService;
+    private final DepositUseCase depositUseCase;
 
-    public WalletController(WalletService walletService, TransactionService transactionService) {
+    private final WithdrawUseCase withdrawUseCase;
+
+    public WalletController(WalletService walletService, DepositUseCase depositUseCase, WithdrawUseCase withdrawUseCase) {
         this.walletService = walletService;
-        this.transactionService = transactionService;
+        this.depositUseCase = depositUseCase;
+        this.withdrawUseCase = withdrawUseCase;
     }
 
     @GetMapping("/freeze")
@@ -78,7 +82,7 @@ public class WalletController {
             @Valid @RequestBody DepositRequest request) {
 
         return ResponseEntity.ok(
-                walletService.deposit(
+                depositUseCase.deposit(
                         authentication.getName(),
                         request
                 )
@@ -96,7 +100,7 @@ public class WalletController {
                 (CustomUserDetails) authentication.getPrincipal();
 
         assert user != null;
-        return walletService.withdraw(
+        return withdrawUseCase.withdraw(
                 user.getId(),
                 request
         );

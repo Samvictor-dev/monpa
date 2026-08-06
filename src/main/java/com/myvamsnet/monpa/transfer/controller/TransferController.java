@@ -1,8 +1,8 @@
 package com.myvamsnet.monpa.transfer.controller;
 
+import com.myvamsnet.monpa.application.transfer.TransferUseCase;
 import com.myvamsnet.monpa.dto.transaction.TransactionResponse;
 import com.myvamsnet.monpa.transfer.dto.TransferRequest;
-import com.myvamsnet.monpa.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class TransferController {
 
-    private final TransferService transferService;
+    private final TransferUseCase transferUseCase;
 
     @PostMapping
     public ResponseEntity<TransactionResponse> transfer(
@@ -24,7 +24,7 @@ public class TransferController {
         String email = authentication.getName();
 
         TransactionResponse response =
-                transferService.transfer(email, request);
+                transferUseCase.transfer(email, request);
 
         return ResponseEntity.ok(response);
     }
