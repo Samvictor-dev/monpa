@@ -52,4 +52,76 @@ public class Journal {
     @JoinColumn(name = "reversed_journal_id")
     private Journal reversedJournal;
 
+
+    public void post() {
+
+        if (status == JournalStatus.POSTED) {
+
+            throw new IllegalStateException(
+                    "Journal has already been posted."
+            );
+        }
+
+        if (status != JournalStatus.PENDING) {
+
+            throw new IllegalStateException(
+                    "Only pending journals can be posted."
+            );
+        }
+
+        this.status = JournalStatus.POSTED;
+
+        this.postedAt = LocalDateTime.now();
+    }
+
+    public boolean isPosted() {
+
+        return status == JournalStatus.POSTED;
+
+    }
+
+    public boolean isPending() {
+
+        return status == JournalStatus.PENDING;
+
+    }
+
+    public void ensurePending() {
+
+        if (status != JournalStatus.PENDING) {
+
+            throw new IllegalStateException(
+                    "Posted journal cannot be modified."
+            );
+        }
+    }
+
+    public void reverseOf(Journal originalJournal) {
+
+        if (originalJournal == null) {
+
+            throw new IllegalArgumentException(
+                    "Original journal cannot be null."
+            );
+        }
+
+        if (originalJournal == this) {
+
+            throw new IllegalArgumentException(
+                    "A journal cannot reverse itself."
+            );
+        }
+
+        if (!originalJournal.isPosted()) {
+
+            throw new IllegalStateException(
+                    "Only posted journals can be reversed."
+            );
+        }
+
+        this.reversedJournal = originalJournal;
+
+        this.type = JournalType.REVERSAL;
+    }
+
 }

@@ -59,6 +59,8 @@ public class JournalService {
             String description
     ) {
 
+        journal.ensurePending();
+
         return createEntry(
                 journal,
                 account,
@@ -75,6 +77,8 @@ public class JournalService {
             Money money,
             String description
     ) {
+
+        journal.ensurePending();
 
         return createEntry(
                 journal,

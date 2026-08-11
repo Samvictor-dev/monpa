@@ -43,8 +43,8 @@ public class ReversalService {
                 ReferenceGenerator.generateJournalReference()
         );
 
-        reversalJournal.setType(
-                JournalType.REVERSAL
+        reversalJournal.reverseOf(
+                originalJournal
         );
 
         reversalJournal.setStatus(
@@ -64,10 +64,6 @@ public class ReversalService {
         );
 
         reversalJournal.setCreatedAt(now);
-
-        reversalJournal.setReversedJournal(
-                originalJournal
-        );
 
         journalRepository.save(reversalJournal);
 

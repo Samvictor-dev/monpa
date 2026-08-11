@@ -1,12 +1,13 @@
 package com.myvamsnet.monpa.accounting;
 
+import com.myvamsnet.monpa.accounting.validator.JournalValidator;
 import com.myvamsnet.monpa.model.Journal;
-import com.myvamsnet.monpa.model.JournalStatus;
 import com.myvamsnet.monpa.repository.JournalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+
 
 @Service
 @RequiredArgsConstructor
@@ -14,19 +15,16 @@ public class PostingService {
 
     private final JournalRepository journalRepository;
 
+    private final JournalValidator journalValidator;
+
+    @Transactional
     public Journal post (Journal journal) {
 
-        if (journal.getStatus() == JournalStatus.POSTED) {
-            throw new IllegalStateException(
-                    "Journal has already been posted."
-            );
-        }
+        journalValidator.validate(journal);
 
-        journal.setStatus(JournalStatus.POSTED);
-        journal.setPostedAt(LocalDateTime.now());
+        journal.post();
 
         return journalRepository.save(journal);
-
     }
 
 }
