@@ -7,7 +7,6 @@ import com.myvamsnet.monpa.dto.wallet.WalletResponse;
 import com.myvamsnet.monpa.dto.wallet.WithdrawRequest;
 import com.myvamsnet.monpa.mapper.WalletMapper;
 import com.myvamsnet.monpa.model.Journal;
-import com.myvamsnet.monpa.model.Transaction;
 import com.myvamsnet.monpa.model.Wallet;
 import com.myvamsnet.monpa.repository.WalletRepository;
 import com.myvamsnet.monpa.service.TransactionService;
@@ -59,8 +58,6 @@ public class WithdrawTransactionService {
                 amount
         );
 
-        wallet.withdraw(amount);
-
         walletRepository.save(wallet);
 
         Journal journal =
@@ -74,15 +71,14 @@ public class WithdrawTransactionService {
         String transactionReference =
                 transactionService.generateTransactionReference();
 
-        Transaction transaction =
+
                 transactionService.recordWithdrawal(
                         wallet,
                         amount,
                         "Wallet Withdrawal",
-                        transactionReference
+                        transactionReference,
+                        journal
                 );
-
-        transaction.attachJournal(journal);
 
         return walletMapper.toWalletResponse(wallet);
 

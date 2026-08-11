@@ -41,65 +41,60 @@ public class TransactionService {
 
     @Transactional
     public Transaction recordTransferOut(
+
             Wallet wallet,
-            Money amount,
+
+            Money money,
+
             String description,
-            String reference) {
 
-        Transaction transaction = new Transaction();
+            String transferReference
 
-        transaction.setTransactionReference(generateTransactionReference());
+    ) {
 
-        transaction.setTransferReference(reference);
+        String transactionReference =
+                generateTransactionReference();
 
-        transaction.setWallet(wallet);
-
-        transaction.setBalanceAfterTransaction(wallet.getBalance());
-
-        transaction.setType(TransactionType.TRANSFER_OUT);
-
-        transaction.setStatus(TransactionStatus.SUCCESS);
-
-        transaction.setAmount(amount.getAmount());
-
-        transaction.setCurrency(amount.getCurrency());
-
-        transaction.setDescription(description);
+        Transaction transaction =
+                Transaction.transferOut(
+                        wallet,
+                        money,
+                        description,
+                        transactionReference,
+                        transferReference
+                );
 
         return transactionRepository.save(transaction);
     }
 
     @Transactional
     public Transaction recordTransferIn(
+
             Wallet wallet,
-            Money amount,
+
+            Money money,
+
             String description,
-            String reference) {
 
-        Transaction transaction = new Transaction();
+            String transferReference
 
-        transaction.setTransactionReference(generateTransactionReference());
+    ) {
 
-        transaction.setTransferReference(reference);
+        String transactionReference =
+                generateTransactionReference();
 
-        transaction.setWallet(wallet);
+        Transaction transaction =
+                Transaction.transferIn(
+                        wallet,
+                        money,
+                        description,
+                        transactionReference,
+                        transferReference
+                );
 
-        transaction.setBalanceAfterTransaction(wallet.getBalance());
-
-        transaction.setType(TransactionType.TRANSFER_IN);
-
-        transaction.setStatus(TransactionStatus.SUCCESS);
-
-        transaction.setAmount(amount.getAmount());
-
-        transaction.setCurrency(amount.getCurrency());
-
-        transaction.setDescription(description);
-
-        transactionRepository.save(transaction);
-
-        return transaction;
+        return transactionRepository.save(transaction);
     }
+
 
     public String generateTransactionReference() {
         return "TXN-" +
@@ -122,31 +117,31 @@ public class TransactionService {
     }
 
     @Transactional
-    public Transaction recordWithdrawal(
+    public void recordWithdrawal(
+
             Wallet wallet,
-            Money amount,
+
+            Money money,
+
             String description,
-            String reference) {
 
-        Transaction transaction = new Transaction();
+            String transactionReference,
 
-        transaction.setTransactionReference(reference);
+            Journal journal
 
-        transaction.setWallet(wallet);
+    ) {
 
-        transaction.setBalanceAfterTransaction(wallet.getBalance());
+        Transaction transaction =
+                Transaction.withdrawal(
+                        wallet,
+                        money,
+                        description,
+                        transactionReference
+                );
 
-        transaction.setType(TransactionType.WITHDRAWAL);
+        transaction.attachJournal(journal);
 
-        transaction.setStatus(TransactionStatus.SUCCESS);
-
-        transaction.setAmount(amount.getAmount());
-
-        transaction.setCurrency(amount.getCurrency());
-
-        transaction.setDescription(description);
-
-        return transactionRepository.save(transaction);
+        transactionRepository.save(transaction);
     }
 
     @Transactional
@@ -158,7 +153,7 @@ public class TransactionService {
     ) {
 
         Transaction transaction =
-                Transaction.createDeposit(
+                Transaction.deposit(
                         wallet,
                         amount,
                         description,

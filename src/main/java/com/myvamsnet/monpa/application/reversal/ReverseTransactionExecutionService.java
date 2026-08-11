@@ -208,56 +208,27 @@ public class ReverseTransactionExecutionService {
             Wallet wallet
     ) {
 
-        Transaction reversal = new Transaction();
+        String reversalReference =
+                ReferenceGenerator.generateTransactionReference();
 
-        reversal.setTransactionReference(
-                ReferenceGenerator.generateTransactionReference()
-        );
+        Transaction reversal =
+                Transaction.reversal(
+                        transaction,
+                        wallet,
+                        "Reversal of "
+                                + transaction.getTransactionReference(),
+                        reversalReference
+                );
 
-        reversal.setTransferReference(
-                transaction.getTransferReference()
-        );
-
-        reversal.setType(
-                transaction.getType()
-        );
-
-        reversal.setAmount(
-                transaction.getAmount()
-        );
-
-        reversal.setCurrency(
-                transaction.getCurrency()
-        );
-
-        reversal.setStatus(
-                TransactionStatus.SUCCESS
-        );
-
-        reversal.setWallet(
-                wallet
-        );
-
-        reversal.setJournal(
-                reversalJournal
-        );
-
-        reversal.setDescription(
-                "Reversal of "
-                        + transaction.getDescription()
-        );
-
-        reversal.setBalanceAfterTransaction(
-                wallet.getBalance()
-        );
+        reversal.attachJournal(reversalJournal);
 
         transaction.reverse(reversal);
 
         reversal.linkToOriginal(transaction);
 
-        transactionRepository.save(
-                reversal
-        );
+        transactionRepository.save(transaction);
+
+        transactionRepository.save(reversal);
 
     }
 

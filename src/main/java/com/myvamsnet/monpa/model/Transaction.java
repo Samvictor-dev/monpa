@@ -92,11 +92,18 @@ public class Transaction {
     }
 
     public void linkToOriginal(Transaction original) {
+
+        if (original == null) {
+            throw new IllegalArgumentException(
+                    "Original transaction cannot be null."
+            );
+        }
+
         this.reversalTransaction = original;
     }
 
     //Static Factory (create domain factory)
-    public static Transaction createDeposit(
+    public static Transaction deposit(
 
             Wallet wallet,
 
@@ -104,9 +111,27 @@ public class Transaction {
 
             String description,
 
-            String reference
+            String transactionReference
 
     ) {
+
+        if (wallet == null) {
+            throw new IllegalArgumentException(
+                    "Wallet cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (transactionReference == null || transactionReference.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Transaction reference cannot be empty."
+            );
+        }
 
         Transaction transaction = new Transaction();
 
@@ -120,7 +145,7 @@ public class Transaction {
 
         transaction.status = TransactionStatus.SUCCESS;
 
-        transaction.transactionReference = reference;
+        transaction.transactionReference = transactionReference;
 
         transaction.description = description;
 
@@ -131,10 +156,261 @@ public class Transaction {
 
     }
 
+    public static Transaction withdrawal(
+
+            Wallet wallet,
+
+            Money money,
+
+            String description,
+
+            String transactionReference
+
+    ) {
+
+        if (wallet == null) {
+            throw new IllegalArgumentException(
+                    "Wallet cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (transactionReference == null
+                || transactionReference.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Transaction reference cannot be empty."
+            );
+        }
+
+        Transaction transaction = new Transaction();
+
+        transaction.wallet = wallet;
+
+        transaction.amount = money.getAmount();
+
+        transaction.currency = money.getCurrency();
+
+        transaction.type = TransactionType.WITHDRAWAL;
+
+        transaction.status = TransactionStatus.SUCCESS;
+
+        transaction.transactionReference =
+                transactionReference;
+
+        transaction.description =
+                description;
+
+        transaction.balanceAfterTransaction =
+                wallet.getBalance();
+
+        return transaction;
+    }
+
+    public static Transaction transferOut(
+
+            Wallet wallet,
+
+            Money money,
+
+            String description,
+
+            String transactionReference,
+
+            String transferReference
+
+    ) {
+
+        if (wallet == null) {
+            throw new IllegalArgumentException(
+                    "Wallet cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (transferReference == null
+                || transferReference.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Transfer reference cannot be empty."
+            );
+        }
+
+        Transaction transaction = new Transaction();
+
+        transaction.wallet = wallet;
+
+        transaction.amount = money.getAmount();
+
+        transaction.currency = money.getCurrency();
+
+        transaction.type =
+                TransactionType.TRANSFER_OUT;
+
+        transaction.status =
+                TransactionStatus.SUCCESS;
+
+        transaction.transferReference =
+                transferReference;
+
+        transaction.description =
+                description;
+
+        transaction.balanceAfterTransaction =
+                wallet.getBalance();
+
+        transaction.transactionReference =
+                transactionReference;
+
+        return transaction;
+    }
+
+    public static Transaction transferIn(
+
+            Wallet wallet,
+
+            Money money,
+
+            String description,
+
+            String transactionReference,
+
+            String transferReference
+
+    ) {
+
+        if (wallet == null) {
+            throw new IllegalArgumentException(
+                    "Wallet cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (transferReference == null
+                || transferReference.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Transfer reference cannot be empty."
+            );
+        }
+
+        Transaction transaction = new Transaction();
+
+        transaction.wallet = wallet;
+
+        transaction.amount = money.getAmount();
+
+        transaction.currency = money.getCurrency();
+
+        transaction.type =
+                TransactionType.TRANSFER_IN;
+
+        transaction.status =
+                TransactionStatus.SUCCESS;
+
+        transaction.transferReference =
+                transferReference;
+
+        transaction.description =
+                description;
+
+        transaction.balanceAfterTransaction =
+                wallet.getBalance();
+
+        transaction.transactionReference =
+                transactionReference;
+
+        return transaction;
+    }
+
+    public static Transaction reversal(
+
+            Transaction original,
+
+            Wallet wallet,
+
+            String description,
+
+            String transactionReference
+
+    ) {
+
+        if (original == null) {
+            throw new IllegalArgumentException(
+                    "Original transaction cannot be null."
+            );
+        }
+
+        if (wallet == null) {
+            throw new IllegalArgumentException(
+                    "Wallet cannot be null."
+            );
+        }
+
+        if (transactionReference == null
+                || transactionReference.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Transaction reference cannot be empty."
+            );
+        }
+
+        Transaction reversal = new Transaction();
+
+        reversal.wallet = wallet;
+
+        reversal.amount = original.amount;
+
+        reversal.currency = original.currency;
+
+        reversal.type = original.type;
+
+        reversal.status = TransactionStatus.SUCCESS;
+
+        reversal.transactionReference =
+                transactionReference;
+
+        reversal.transferReference =
+                original.transferReference;
+
+        reversal.description =
+                description;
+
+        reversal.balanceAfterTransaction =
+                wallet.getBalance();
+
+        return reversal;
+    }
+
     //Removing Public Setters
     public void attachJournal(
+
             Journal journal
+
     ) {
+
+        if (journal == null) {
+
+            throw new IllegalArgumentException(
+                    "Journal cannot be null."
+            );
+
+        }
 
         this.journal = journal;
 
