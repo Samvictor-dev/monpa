@@ -106,9 +106,9 @@ public class TransferTransactionService {
                         transferReference
                 );
 
-        senderTransaction.setJournal(journal);
+        senderTransaction.attachJournal(journal);
 
-        receiverTransaction.setJournal(journal);
+        receiverTransaction.attachJournal(journal);
 
         return transactionMapper.toResponse(senderTransaction);
 

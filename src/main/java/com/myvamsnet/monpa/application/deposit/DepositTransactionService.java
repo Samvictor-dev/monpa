@@ -83,7 +83,7 @@ public class DepositTransactionService {
                         transactionReference
                 );
 
-        transaction.setJournal(journal);
+        transaction.attachJournal(journal);
 
         return transactionMapper.toResponse(transaction);
 

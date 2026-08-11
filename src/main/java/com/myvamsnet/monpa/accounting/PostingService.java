@@ -16,6 +16,12 @@ public class PostingService {
 
     public Journal post (Journal journal) {
 
+        if (journal.getStatus() == JournalStatus.POSTED) {
+            throw new IllegalStateException(
+                    "Journal has already been posted."
+            );
+        }
+
         journal.setStatus(JournalStatus.POSTED);
         journal.setPostedAt(LocalDateTime.now());
 

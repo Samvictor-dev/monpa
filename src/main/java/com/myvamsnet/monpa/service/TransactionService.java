@@ -157,45 +157,18 @@ public class TransactionService {
             String reference
     ) {
 
-        Transaction transaction = new Transaction();
-
-        transaction.setTransactionReference(reference);
-
-        transaction.setWallet(wallet);
-
-        transaction.setBalanceAfterTransaction(wallet.getBalance());
-
-        transaction.setType(TransactionType.DEPOSIT);
-
-        transaction.setStatus(TransactionStatus.SUCCESS);
-
-        transaction.setAmount(amount.getAmount());
-
-        transaction.setCurrency(amount.getCurrency());
-
-        transaction.setDescription(description);
+        Transaction transaction =
+                Transaction.createDeposit(
+                        wallet,
+                        amount,
+                        description,
+                        reference
+                );
 
         return transactionRepository.save(transaction);
     }
 
-//    @Transactional(readOnly = true)
-//    public List<TransactionResponse> getTransactionHistory(Long userId) {
-//
-//        Wallet wallet = walletRepository
-//                .findByUserId(userId)
-//                .orElseThrow(() ->
-//                        new WalletNotFoundException(userId));
-//
-//        return transactionRepository
-//                .findByWalletIdOrderByCreatedAtDesc(
-//                        wallet.getId()
-//                )
-//                .stream()
-//                .map(transactionMapper::toResponse)
-//                .toList();
-//
-//    }
-
+    @Transactional(readOnly = true)
     public PagedResponse<TransactionHistoryResponse> getTransactionHistory(
             String email,
             TransactionFilter filter,

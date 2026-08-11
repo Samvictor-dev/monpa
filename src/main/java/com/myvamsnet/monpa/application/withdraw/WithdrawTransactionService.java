@@ -82,7 +82,7 @@ public class WithdrawTransactionService {
                         transactionReference
                 );
 
-        transaction.setJournal(journal);
+        transaction.attachJournal(journal);
 
         return walletMapper.toWalletResponse(wallet);
 

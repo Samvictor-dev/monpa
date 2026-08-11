@@ -251,17 +251,9 @@ public class ReverseTransactionExecutionService {
                 wallet.getBalance()
         );
 
-        transaction.setStatus(
-                TransactionStatus.REVERSED
-        );
+        transaction.reverse(reversal);
 
-        transaction.setReversalTransaction(
-                reversal
-        );
-
-        reversal.setReversalTransaction(
-                transaction
-        );
+        reversal.linkToOriginal(transaction);
 
         transactionRepository.save(
                 reversal

@@ -1,6 +1,8 @@
 package com.myvamsnet.monpa.model;
 
+import com.myvamsnet.monpa.common.exception.InvalidTransactionStateException;
 import com.myvamsnet.monpa.common.valueobject.Currency;
+import com.myvamsnet.monpa.common.valueobject.Money;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -71,25 +73,83 @@ public class Transaction {
 
     // getters & setters
 
-//    private String transactionReference;
-//
-//    private String transferReference;
-//
-//    private TransactionType type;
-//
-//    private TransactionStatus status;
-//
-//    private BigDecimal amount;
-//
-//    private Currency currency;
-//
-//    private String description;
-//
-//    private LocalDateTime createdAt;
-//
-//    private LocalDateTime completedAt;
-//
+
 //    private String initiatedBy;
-//
 //    private String channel;
+
+
+
+    public void reverse(Transaction reversal) {
+
+        if (status == TransactionStatus.REVERSED) {
+            throw new InvalidTransactionStateException(
+                    "Transaction has already been reversed."
+            );
+        }
+
+        this.status = TransactionStatus.REVERSED;
+        this.reversalTransaction = reversal;
+    }
+
+    public void linkToOriginal(Transaction original) {
+        this.reversalTransaction = original;
+    }
+
+    //Static Factory (create domain factory)
+    public static Transaction createDeposit(
+
+            Wallet wallet,
+
+            Money money,
+
+            String description,
+
+            String reference
+
+    ) {
+
+        Transaction transaction = new Transaction();
+
+        transaction.wallet = wallet;
+
+        transaction.amount = money.getAmount();
+
+        transaction.currency = money.getCurrency();
+
+        transaction.type = TransactionType.DEPOSIT;
+
+        transaction.status = TransactionStatus.SUCCESS;
+
+        transaction.transactionReference = reference;
+
+        transaction.description = description;
+
+        transaction.balanceAfterTransaction =
+                wallet.getBalance();
+
+        return transaction;
+
+    }
+
+    //Removing Public Setters
+    public void attachJournal(
+            Journal journal
+    ) {
+
+        this.journal = journal;
+
+    }
+
+    public void markFailed() {
+
+        this.status = TransactionStatus.FAILED;
+
+    }
+
+    public void markSuccessful() {
+
+        this.status = TransactionStatus.SUCCESS;
+
+    }
+
 }
