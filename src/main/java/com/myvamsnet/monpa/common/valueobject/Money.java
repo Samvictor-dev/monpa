@@ -44,12 +44,30 @@ public class Money {
         this.currency = currency;
     }
 
+    // ---------------------------------------------------------
+    // Factory methods
+    // ---------------------------------------------------------
+
+
     public static Money of(BigDecimal amount, Currency currency) {
         return new Money(amount, currency);
     }
 
-    public static Money of(String amount, Currency currency) {
-        return new Money(new BigDecimal(amount), currency);
+    public static Money of(
+            String amount,
+            Currency currency
+    ) {
+
+        if (amount == null || amount.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Amount cannot be empty."
+            );
+        }
+
+        return new Money(
+                new BigDecimal(amount),
+                currency
+        );
     }
 
     public BigDecimal getAmount() {
@@ -60,100 +78,204 @@ public class Money {
         return currency;
     }
 
-    public Money add(Money other) {
+    public static Money zero(
+            Currency currency
+    ) {
 
+        return new Money(
+                BigDecimal.ZERO,
+                currency
+        );
+    }
+
+
+    // ---------------------------------------------------------
+    // Arithmetic
+    // ---------------------------------------------------------
+
+    public Money add(
+            Money other
+    ) {
+
+        validateOther(other);
         validateCurrency(other);
 
         return new Money(
                 amount.add(other.amount),
                 currency
         );
-
     }
 
-    private void validateCurrency(Money other){
 
-        if(!currency.equals(other.currency)){
+    public Money subtract(
+            Money other
+    ) {
 
-            throw new IllegalArgumentException(
-                    "Currencies must match."
-            );
-
-        }
-
-    }
-
-    public Money subtract(Money other) {
-
+        validateOther(other);
         validateCurrency(other);
 
         BigDecimal result =
-                amount.subtract(other.amount);
+                amount.subtract(
+                        other.amount
+                );
 
-        if(result.compareTo(BigDecimal.ZERO) < 0){
+        if (result.compareTo(BigDecimal.ZERO) < 0) {
+
             throw new IllegalArgumentException(
                     "Insufficient funds."
             );
         }
 
-        return new Money(result, currency);
-
+        return new Money(
+                result,
+                currency
+        );
     }
+
+
+    // ---------------------------------------------------------
+    // Comparisons
+    // ---------------------------------------------------------
 
     public boolean isPositive() {
 
-        return amount.compareTo(BigDecimal.ZERO) > 0;
+        return amount.compareTo(
+                BigDecimal.ZERO
+        ) > 0;
     }
+
 
     public boolean isZero() {
 
-        return amount.compareTo(BigDecimal.ZERO) == 0;
+        return amount.compareTo(
+                BigDecimal.ZERO
+        ) == 0;
     }
 
-    public boolean isGreaterThan(Money other){
 
+    public boolean isGreaterThan(
+            Money other
+    ) {
+
+        validateOther(other);
         validateCurrency(other);
 
-        return amount.compareTo(other.amount) > 0;
-
+        return amount.compareTo(
+                other.amount
+        ) > 0;
     }
 
-    public static Money zero(Currency currency){
 
-        return new Money(
-                BigDecimal.ZERO,
-                currency
-        );
+    public boolean isGreaterThanOrEqualTo(
+            Money other
+    ) {
 
+        validateOther(other);
+        validateCurrency(other);
+
+        return amount.compareTo(
+                other.amount
+        ) >= 0;
     }
+
+
+    public boolean isLessThan(
+            Money other
+    ) {
+
+        validateOther(other);
+        validateCurrency(other);
+
+        return amount.compareTo(
+                other.amount
+        ) < 0;
+    }
+
+
+    public boolean isLessThanOrEqualTo(
+            Money other
+    ) {
+
+        validateOther(other);
+        validateCurrency(other);
+
+        return amount.compareTo(
+                other.amount
+        ) <= 0;
+    }
+
+
+    // ---------------------------------------------------------
+    // Validation
+    // ---------------------------------------------------------
+
+    private void validateOther(
+            Money other
+    ) {
+
+        if (other == null) {
+
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+    }
+
+
+    private void validateCurrency(
+            Money other
+    ) {
+
+        if (currency != other.currency) {
+
+            throw new IllegalArgumentException(
+                    "Currencies must match."
+            );
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // Equality
+    // ---------------------------------------------------------
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(
+            Object o
+    ) {
 
-        if (this == o)
+        if (this == o) {
             return true;
+        }
 
-        if (!(o instanceof Money money))
+        if (!(o instanceof Money money)) {
             return false;
+        }
 
-        return amount.equals(money.amount)
+        return amount.compareTo(
+                money.amount
+        ) == 0
                 && currency == money.currency;
-
     }
+
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(amount, currency);
-
+        return Objects.hash(
+                amount.stripTrailingZeros(),
+                currency
+        );
     }
+
+
+    // ---------------------------------------------------------
+    // String representation
+    // ---------------------------------------------------------
 
     @Override
     public String toString() {
 
         return currency + " " + amount;
-
     }
-
-
 }
