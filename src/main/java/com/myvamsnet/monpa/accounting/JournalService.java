@@ -61,14 +61,15 @@ public class JournalService {
 
         journal.ensurePending();
 
-        return createEntry(
-                journal,
-                account,
-                LedgerEntryType.DEBIT,
-                money,
-                description
-        );
+        LedgerEntry entry =
+                LedgerEntry.debit(
+                        journal,
+                        account,
+                        money,
+                        description
+                );
 
+        return ledgerEntryRepository.save(entry);
     }
 
     public LedgerEntry createCreditEntry(
@@ -80,14 +81,15 @@ public class JournalService {
 
         journal.ensurePending();
 
-        return createEntry(
-                journal,
-                account,
-                LedgerEntryType.CREDIT,
-                money,
-                description
-        );
+        LedgerEntry entry =
+                LedgerEntry.credit(
+                        journal,
+                        account,
+                        money,
+                        description
+                );
 
+        return ledgerEntryRepository.save(entry);
     }
 
     private LedgerEntry createEntry(

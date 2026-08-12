@@ -83,8 +83,7 @@ public class ReversalService {
             LedgerEntry reversalEntry =
                     createReversalEntry(
                             originalEntry,
-                            reversalJournal,
-                            now
+                            reversalJournal
                     );
 
             ledgerEntryRepository.save(reversalEntry);
@@ -102,47 +101,34 @@ public class ReversalService {
     private LedgerEntry createReversalEntry(
 
             LedgerEntry originalEntry,
-            Journal reversalJournal,
-            LocalDateTime now
+            Journal reversalJournal
 
     ) {
 
-        LedgerEntry reversalEntry =
-                new LedgerEntry();
+        LedgerEntry reversalEntry;
 
-        reversalEntry.setJournal(
-                reversalJournal
-        );
+        if (originalEntry.getEntryType() == LedgerEntryType.DEBIT) {
 
-        reversalEntry.setLedgerAccount(
-                originalEntry.getLedgerAccount()
-        );
+            reversalEntry =
+                    LedgerEntry.credit(
+                            reversalJournal,
+                            originalEntry.getLedgerAccount(),
+                            originalEntry.getMoney(),
+                            "Reversal of "
+                                    + originalEntry.getDescription()
+                    );
 
-        // Money is immutable, safe to reuse
-        reversalEntry.setMoney(
-                originalEntry.getMoney()
-        );
+        } else {
 
-        reversalEntry.setDescription(
-                "Reversal of " +
-                        originalEntry.getDescription()
-        );
-
-        reversalEntry.setReference(
-                reversalJournal.getJournalReference()
-        );
-
-        reversalEntry.setCreatedAt(now);
-
-        reversalEntry.setEntryType(
-
-                originalEntry.getEntryType() ==
-                        LedgerEntryType.DEBIT
-
-                        ? LedgerEntryType.CREDIT
-                        : LedgerEntryType.DEBIT
-
-        );
+            reversalEntry =
+                    LedgerEntry.debit(
+                            reversalJournal,
+                            originalEntry.getLedgerAccount(),
+                            originalEntry.getMoney(),
+                            "Reversal of "
+                                    + originalEntry.getDescription()
+                    );
+        }
 
         return reversalEntry;
     }

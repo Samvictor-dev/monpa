@@ -44,4 +44,108 @@ public class LedgerEntry {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    public static LedgerEntry debit(
+            Journal journal,
+            LedgerAccount ledgerAccount,
+            Money money,
+            String description
+    ) {
+
+        if (journal == null) {
+            throw new IllegalArgumentException(
+                    "Journal cannot be null."
+            );
+        }
+
+        if (ledgerAccount == null) {
+            throw new IllegalArgumentException(
+                    "Ledger account cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (!money.isPositive()) {
+            throw new IllegalArgumentException(
+                    "Ledger amount must be greater than zero."
+            );
+        }
+
+        LedgerEntry entry = new LedgerEntry();
+
+        entry.journal = journal;
+
+        entry.ledgerAccount = ledgerAccount;
+
+        entry.entryType = LedgerEntryType.DEBIT;
+
+        entry.money = money;
+
+        entry.description = description;
+
+        entry.reference =
+                journal.getJournalReference() + "-DR";
+
+        entry.createdAt =
+                LocalDateTime.now();
+
+        return entry;
+    }
+
+    public static LedgerEntry credit(
+            Journal journal,
+            LedgerAccount ledgerAccount,
+            Money money,
+            String description
+    ) {
+
+        if (journal == null) {
+            throw new IllegalArgumentException(
+                    "Journal cannot be null."
+            );
+        }
+
+        if (ledgerAccount == null) {
+            throw new IllegalArgumentException(
+                    "Ledger account cannot be null."
+            );
+        }
+
+        if (money == null) {
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (!money.isPositive()) {
+            throw new IllegalArgumentException(
+                    "Ledger amount must be greater than zero."
+            );
+        }
+
+        LedgerEntry entry = new LedgerEntry();
+
+        entry.journal = journal;
+
+        entry.ledgerAccount = ledgerAccount;
+
+        entry.entryType = LedgerEntryType.CREDIT;
+
+        entry.money = money;
+
+        entry.description = description;
+
+        entry.reference =
+                journal.getJournalReference() + "-CR";
+
+        entry.createdAt =
+                LocalDateTime.now();
+
+        return entry;
+    }
 }
