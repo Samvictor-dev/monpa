@@ -1,5 +1,6 @@
 package com.myvamsnet.monpa.model;
 
+import com.myvamsnet.monpa.common.valueobject.Money;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -80,6 +81,76 @@ public class Journal {
         return Collections.unmodifiableList(entries);
     }
 
+    public static Journal create(
+            JournalType type,
+            Money money,
+            String narration,
+            String journalReference
+    ) {
+
+        if (type == null) {
+
+            throw new IllegalArgumentException(
+                    "Journal type cannot be null."
+            );
+        }
+
+        if (money == null) {
+
+            throw new IllegalArgumentException(
+                    "Journal money cannot be null."
+            );
+        }
+
+        if (!money.isPositive()) {
+
+            throw new IllegalArgumentException(
+                    "Journal amount must be greater than zero."
+            );
+        }
+
+        if (narration == null ||
+                narration.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Journal narration cannot be empty."
+            );
+        }
+
+        if (journalReference == null ||
+                journalReference.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Journal reference cannot be empty."
+            );
+        }
+
+
+        Journal journal = new Journal();
+
+        journal.amount =
+                money.getAmount();
+
+        journal.currency =
+                money.getCurrency().name();
+
+        journal.journalReference =
+                journalReference;
+
+        journal.type =
+                type;
+
+        journal.status =
+                JournalStatus.PENDING;
+
+        journal.narration =
+                narration;
+
+        journal.createdAt =
+                LocalDateTime.now();
+
+        return journal;
+    }
 
     public void post() {
 
