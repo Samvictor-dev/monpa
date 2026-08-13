@@ -1,10 +1,8 @@
 package com.myvamsnet.monpa.accounting;
 
-import com.myvamsnet.monpa.accounting.validator.JournalValidator;
 import com.myvamsnet.monpa.common.valueobject.Money;
 import com.myvamsnet.monpa.model.*;
 import com.myvamsnet.monpa.repository.JournalRepository;
-import com.myvamsnet.monpa.repository.LedgerEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +14,8 @@ import java.time.LocalDateTime;
 public class JournalService {
 
     private final JournalRepository journalRepository;
-    private final LedgerEntryRepository ledgerEntryRepository;
 
     private final PostingService postingService;
-    private final JournalValidator journalValidator;
 
     LocalDateTime now = LocalDateTime.now();
 
@@ -59,8 +55,6 @@ public class JournalService {
             String description
     ) {
 
-        journal.ensurePending();
-
         LedgerEntry entry =
                 LedgerEntry.debit(
                         journal,
@@ -69,7 +63,9 @@ public class JournalService {
                         description
                 );
 
-        return ledgerEntryRepository.save(entry);
+        journal.addEntry(entry);
+
+        return entry;
     }
 
     public LedgerEntry createCreditEntry(
@@ -79,8 +75,6 @@ public class JournalService {
             String description
     ) {
 
-        journal.ensurePending();
-
         LedgerEntry entry =
                 LedgerEntry.credit(
                         journal,
@@ -89,43 +83,13 @@ public class JournalService {
                         description
                 );
 
-        return ledgerEntryRepository.save(entry);
-    }
+        journal.addEntry(entry);
 
-    private LedgerEntry createEntry(
-            Journal journal,
-            LedgerAccount account,
-            LedgerEntryType entryType,
-            Money money,
-            String description
-    ) {
-
-        LedgerEntry entry = new LedgerEntry();
-
-        entry.setJournal(journal);
-        entry.setLedgerAccount(account);
-        entry.setEntryType(entryType);
-        entry.setMoney(money);
-        entry.setDescription(description);
-
-        String suffix = switch (entryType) {
-            case DEBIT -> "-DR";
-            case CREDIT -> "-CR";
-        };
-
-        entry.setReference(
-                journal.getJournalReference() + suffix
-        );
-
-        entry.setCreatedAt(now);
-
-        return ledgerEntryRepository.save(entry);
+        return entry;
     }
 
     @Transactional
     public void validateAndPost(Journal journal) {
-
-        journalValidator.validate(journal);
 
         postingService.post(journal);
 

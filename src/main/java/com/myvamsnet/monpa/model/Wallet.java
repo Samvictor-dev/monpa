@@ -26,8 +26,11 @@ public class Wallet {
     @Column(nullable = false, unique = true)
     private String accountNumber;
 
-
-    @Column(nullable = false, precision = 19, scale = 2)
+    @Column(
+            nullable = false,
+            precision = 19,
+            scale = 2
+    )
     private BigDecimal balance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
@@ -45,11 +48,6 @@ public class Wallet {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
-
     @OneToMany(
             mappedBy = "wallet",
             cascade = CascadeType.ALL,
@@ -60,16 +58,46 @@ public class Wallet {
     @Version
     private Long version;
 
-    // Getters
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    // Factory Method
+
 
     private Wallet(
             User user,
             String accountNumber,
             Money balance
     ) {
+
+        if (user == null) {
+
+            throw new IllegalArgumentException(
+                    "User cannot be null."
+            );
+        }
+
+        if (accountNumber == null ||
+                accountNumber.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Account number cannot be empty."
+            );
+        }
+
+        if (balance == null) {
+
+            throw new IllegalArgumentException(
+                    "Balance cannot be null."
+            );
+        }
+
         this.user = user;
         this.accountNumber = accountNumber;
         this.balance = balance.getAmount();
+        this.currency = balance.getCurrency();
     }
 
     public static Wallet create(User user, String accountNumber) {
@@ -85,23 +113,6 @@ public class Wallet {
         );
     }
 
-    public static Wallet createFor(User user, String accountNumber) {
-
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        }
-
-        Wallet wallet = new Wallet();
-
-        wallet.user = user;
-        wallet.accountNumber = accountNumber;
-        wallet.balance = BigDecimal.ZERO;
-        wallet.currency = Currency.NGN;
-        wallet.status = WalletStatus.ACTIVE;
-
-        return wallet;
-    }
-
     private void ensureActive() {
 
         if (status != WalletStatus.ACTIVE) {
@@ -111,30 +122,31 @@ public class Wallet {
         }
     }
 
-    public void deposit(Money amount){
-
-        validateCurrency(amount);
+    public void deposit(
+            Money amount
+    ) {
 
         ensureActive();
 
-        if (!amount.isPositive()) {
+        validateAmount(amount);
 
-            throw new IllegalArgumentException(
-                    "Deposit amount must be greater than zero."
-            );
-        }
-
-        balance = balance.add(amount.getAmount());
-
+        balance =
+                balance.add(
+                        amount.getAmount()
+                );
     }
 
-    public void withdraw(Money amount){
-
-        validateCurrency(amount);
+    public void withdraw(
+            Money amount
+    ) {
 
         ensureActive();
 
-        if(balance.compareTo(amount.getAmount()) < 0){
+        validateAmount(amount);
+
+        if (balance.compareTo(
+                amount.getAmount()
+        ) < 0) {
 
             throw new IllegalStateException(
                     "Insufficient balance."
@@ -176,35 +188,40 @@ public class Wallet {
 
     }
 
-    public boolean canWithdraw(
+    private void validateAmount(
             Money amount
-    ){
+    ) {
 
-        validateCurrency(amount);
+        if (amount == null) {
 
-        return balance.compareTo(
-                amount.getAmount()
-        ) >= 0;
+            throw new IllegalArgumentException(
+                    "Amount cannot be null."
+            );
+        }
 
-    }
+        if (!amount.isPositive()) {
 
-    private void validateCurrency(
-            Money amount
-    ){
+            throw new IllegalArgumentException(
+                    "Amount must be greater than zero."
+            );
+        }
 
-        if(currency != amount.getCurrency()){
+        if (currency != amount.getCurrency()) {
 
             throw new IllegalArgumentException(
                     "Currency mismatch."
             );
-
         }
-
     }
 
     public boolean hasSufficientBalance(
-            Money amount) {
+            Money amount
+    ) {
 
-        return balance.compareTo(amount.getAmount()) >= 0;
+        validateAmount(amount);
+
+        return balance.compareTo(
+                amount.getAmount()
+        ) >= 0;
     }
 }

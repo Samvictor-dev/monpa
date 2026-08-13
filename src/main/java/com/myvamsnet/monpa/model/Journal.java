@@ -8,7 +8,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 @Getter
@@ -52,15 +54,34 @@ public class Journal {
     @JoinColumn(name = "reversed_journal_id")
     private Journal reversedJournal;
 
+    @OneToMany(
+            mappedBy = "journal",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<LedgerEntry> entries = new ArrayList<>();
 
-    public void post() {
 
-        if (status == JournalStatus.POSTED) {
+    public void addEntry(LedgerEntry entry) {
 
-            throw new IllegalStateException(
-                    "Journal has already been posted."
+        if (entry == null) {
+
+            throw new IllegalArgumentException(
+                    "Ledger entry cannot be null."
             );
         }
+
+        ensurePending();
+
+        entries.add(entry);
+    }
+
+    public List<LedgerEntry> getEntries() {
+        return Collections.unmodifiableList(entries);
+    }
+
+
+    public void post() {
 
         if (status != JournalStatus.PENDING) {
 

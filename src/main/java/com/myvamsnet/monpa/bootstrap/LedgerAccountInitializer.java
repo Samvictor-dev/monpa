@@ -1,6 +1,7 @@
 package com.myvamsnet.monpa.bootstrap;
 
 import com.myvamsnet.monpa.model.LedgerAccount;
+import com.myvamsnet.monpa.model.LedgerAccountCategory;
 import com.myvamsnet.monpa.model.LedgerAccountType;
 import com.myvamsnet.monpa.repository.LedgerAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,90 +18,62 @@ public class LedgerAccountInitializer
     @Override
     public void run(String... args) {
 
-        if (!repository.existsByType(LedgerAccountType.CASH)) {
+        createIfMissing(
+                "1001",
+                "Cash",
+                LedgerAccountType.CASH,
+                LedgerAccountCategory.ASSET
+        );
 
-            LedgerAccount cash = new LedgerAccount();
+        createIfMissing(
+                "2001",
+                "Customer Liability",
+                LedgerAccountType.CUSTOMER_LIABILITY,
+                LedgerAccountCategory.LIABILITY
+        );
 
-            cash.setAccountNumber("1001");
+        createIfMissing(
+                "3001",
+                "Fee Revenue",
+                LedgerAccountType.FEE_REVENUE,
+                LedgerAccountCategory.REVENUE
+        );
 
-            cash.setAccountName("Cash");
+        createIfMissing(
+                "4001",
+                "Settlement",
+                LedgerAccountType.SETTLEMENT,
+                LedgerAccountCategory.ASSET
+        );
 
-            cash.setType(LedgerAccountType.CASH);
-
-            repository.save(cash);
-
-        }
-
-        if (!repository.existsByType(
-                LedgerAccountType.CUSTOMER_LIABILITY)) {
-
-            LedgerAccount account = new LedgerAccount();
-
-            account.setAccountNumber("2001");
-
-            account.setAccountName(
-                    "Customer Liability"
-            );
-
-            account.setType(
-                    LedgerAccountType.CUSTOMER_LIABILITY
-            );
-
-            repository.save(account);
-
-        }
-
-        if (!repository.existsByType(
-                LedgerAccountType.FEE_REVENUE)) {
-
-            LedgerAccount account = new LedgerAccount();
-
-            account.setAccountNumber("3001");
-
-            account.setAccountName("Fee Revenue");
-
-            account.setType(
-                    LedgerAccountType.FEE_REVENUE
-            );
-
-            repository.save(account);
-
-        }
-
-        if (!repository.existsByType(
-                LedgerAccountType.SETTLEMENT)) {
-
-            LedgerAccount account = new LedgerAccount();
-
-            account.setAccountNumber("4001");
-
-            account.setAccountName("Settlement");
-
-            account.setType(
-                    LedgerAccountType.SETTLEMENT
-            );
-
-            repository.save(account);
-
-        }
-
-        if (!repository.existsByType(
-                LedgerAccountType.SUSPENSE)) {
-
-            LedgerAccount account = new LedgerAccount();
-
-            account.setAccountNumber("5001");
-
-            account.setAccountName("Suspense");
-
-            account.setType(
-                    LedgerAccountType.SUSPENSE
-            );
-
-            repository.save(account);
-
-        }
-
+        createIfMissing(
+                "5001",
+                "Suspense",
+                LedgerAccountType.SUSPENSE,
+                LedgerAccountCategory.ASSET
+        );
     }
 
+
+    private void createIfMissing(
+            String accountNumber,
+            String accountName,
+            LedgerAccountType type,
+            LedgerAccountCategory category
+    ) {
+
+        if (repository.existsByType(type)) {
+            return;
+        }
+
+        LedgerAccount account =
+                new LedgerAccount(
+                        accountName,
+                        accountNumber,
+                        type,
+                        category
+                );
+
+        repository.save(account);
+    }
 }

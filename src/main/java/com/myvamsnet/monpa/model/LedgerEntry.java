@@ -23,14 +23,15 @@ public class LedgerEntry {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "journal_id")
+    @JoinColumn(name = "journal_id", nullable = false)
     private Journal journal;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ledger_account_id")
+    @JoinColumn(name = "ledger_account_id", nullable = false)
     private LedgerAccount ledgerAccount;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private LedgerEntryType entryType;
 
     @Embedded
@@ -52,40 +53,18 @@ public class LedgerEntry {
             String description
     ) {
 
-        if (journal == null) {
-            throw new IllegalArgumentException(
-                    "Journal cannot be null."
-            );
-        }
-
-        if (ledgerAccount == null) {
-            throw new IllegalArgumentException(
-                    "Ledger account cannot be null."
-            );
-        }
-
-        if (money == null) {
-            throw new IllegalArgumentException(
-                    "Money cannot be null."
-            );
-        }
-
-        if (!money.isPositive()) {
-            throw new IllegalArgumentException(
-                    "Ledger amount must be greater than zero."
-            );
-        }
+        validate(
+                journal,
+                ledgerAccount,
+                money
+        );
 
         LedgerEntry entry = new LedgerEntry();
 
         entry.journal = journal;
-
         entry.ledgerAccount = ledgerAccount;
-
         entry.entryType = LedgerEntryType.DEBIT;
-
         entry.money = money;
-
         entry.description = description;
 
         entry.reference =
@@ -97,6 +76,7 @@ public class LedgerEntry {
         return entry;
     }
 
+
     public static LedgerEntry credit(
             Journal journal,
             LedgerAccount ledgerAccount,
@@ -104,40 +84,18 @@ public class LedgerEntry {
             String description
     ) {
 
-        if (journal == null) {
-            throw new IllegalArgumentException(
-                    "Journal cannot be null."
-            );
-        }
-
-        if (ledgerAccount == null) {
-            throw new IllegalArgumentException(
-                    "Ledger account cannot be null."
-            );
-        }
-
-        if (money == null) {
-            throw new IllegalArgumentException(
-                    "Money cannot be null."
-            );
-        }
-
-        if (!money.isPositive()) {
-            throw new IllegalArgumentException(
-                    "Ledger amount must be greater than zero."
-            );
-        }
+        validate(
+                journal,
+                ledgerAccount,
+                money
+        );
 
         LedgerEntry entry = new LedgerEntry();
 
         entry.journal = journal;
-
         entry.ledgerAccount = ledgerAccount;
-
         entry.entryType = LedgerEntryType.CREDIT;
-
         entry.money = money;
-
         entry.description = description;
 
         entry.reference =
@@ -147,5 +105,41 @@ public class LedgerEntry {
                 LocalDateTime.now();
 
         return entry;
+    }
+
+
+    private static void validate(
+            Journal journal,
+            LedgerAccount ledgerAccount,
+            Money money
+    ) {
+
+        if (journal == null) {
+
+            throw new IllegalArgumentException(
+                    "Journal cannot be null."
+            );
+        }
+
+        if (ledgerAccount == null) {
+
+            throw new IllegalArgumentException(
+                    "Ledger account cannot be null."
+            );
+        }
+
+        if (money == null) {
+
+            throw new IllegalArgumentException(
+                    "Money cannot be null."
+            );
+        }
+
+        if (!money.isPositive()) {
+
+            throw new IllegalArgumentException(
+                    "Ledger amount must be greater than zero."
+            );
+        }
     }
 }

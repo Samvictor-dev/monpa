@@ -34,17 +34,6 @@ public class WalletService {
 
     }
 
-
-//    @Transactional
-//    public Wallet createWallet(User user) {
-//
-//        String accountNumber = generateAccountNumber();
-//
-//        Wallet wallet = Wallet.createFor(user, accountNumber);
-//
-//        return walletRepository.save(wallet);
-//    }
-
     @Transactional(readOnly = true)
     public WalletResponse getMyWallet(String email) {
 
@@ -91,59 +80,6 @@ public class WalletService {
     ) {
         wallet.withdraw(money);
     }
-
-    public void freeze(Wallet wallet) {
-        wallet.freeze();
-    }
-
-    public void unfreeze(Wallet wallet) {
-        wallet.unfreeze();
-    }
-
-//    @Transactional
-//    public TransactionResponse deposit(
-//            String email,
-//            DepositRequest request
-//    ) {
-//
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        Wallet wallet = walletRepository.findByUser(user)
-//                .orElseThrow(() -> new RuntimeException("Wallet not found"));
-//
-//
-//        Money depositAmount = Money.of(
-//                request.getAmount(),
-//                wallet.getCurrency()
-//        );
-//
-//        Journal journal = accountingService.recordDeposit(
-//                wallet,
-//                depositAmount,
-//                "Deposit into wallet "
-//                        + wallet.getAccountNumber()
-//        );
-//
-//        wallet.deposit(depositAmount);
-//
-//        walletRepository.save(wallet);
-//
-//        String transactionReference = transactionService.generateTransactionReference();
-//
-//        Transaction transaction =
-//                transactionService.recordDeposit(
-//                        wallet,
-//                        depositAmount,
-//                        request.getDescription(),
-//                        transactionReference
-//                );
-//
-//        transaction.setJournal(journal);
-//
-//        return transactionMapper.toResponse(transaction);
-//
-//    }
 
     @Transactional
     public WalletResponse freezeWallet(String email) {
